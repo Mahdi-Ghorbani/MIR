@@ -18,6 +18,9 @@ if __name__ == '__main__':
     vb_compressor = VariableByte(positional_index=positional_index.index)
     vb_compressor.compress()
 
+    gm_compressor = GammaCode(positional_index=positional_index.index)
+    gm_compressor.compress()
+
     while True:
         print("Please enter the command number:")
         print("0. Exit")
@@ -33,6 +36,10 @@ if __name__ == '__main__':
         print("10. Save the variable byte encoded format in a file")
         print("11. Load a variable byte encoded format from a file")
         print("12. Compare between used space before and after variable byte compression")
+        print("13. Print the gamma encoded format")
+        print("14. Save the gamma encoded format in a file")
+        print("15. Load a gamma encoded format from a file")
+        print("16. Compare between used space before and after gamma compression")
         cmd = int(input())
         if cmd == 0:
             break
@@ -76,3 +83,15 @@ if __name__ == '__main__':
             vb_compressor.load_from_file(cmd)
         elif cmd == 12:
             vb_compressor.print_used_space()
+        elif cmd == 13:
+            gm_compressor.print_result()
+        elif cmd == 14:
+            print("Enter the name of the file")
+            cmd = input()
+            gm_compressor.save_to_file(cmd)
+        elif cmd == 15:
+            print("Enter the name of the file")
+            cmd = input()
+            gm_compressor.load_from_file(cmd)
+        elif cmd == 16:
+            gm_compressor.print_used_space()
