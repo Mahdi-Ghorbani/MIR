@@ -2,6 +2,11 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import string
+import hazm
+import xml.etree.ElementTree as ET
+import reg
+from typing import List
+from utils import PERSIAN_GARBAGE
 
 
 class EnglishProcessor:
@@ -50,27 +55,64 @@ class EnglishProcessor:
 
 
 class PersianProcessor:
+    def __init__(self):
+        self.normalizer = hazm.Normalizer()
+        self.word_tokenizer = hazm.WordTokenizer()
+        self.stemmer = hazm.Stemmer()
+        self.stop_words = hazm.stopwords_list()
 
-    def normalize(self):
+    def normalize(self, text):
+        return self.normalizer.normalize(text)
+
+    def tokenize(self, text):
+        return self.word_tokenizer.tokenize(text)
+
+    def remove_punctuations(self, text):
+        return text.translate(str.maketrans(dict.fromkeys(list(string.punctuation))))
+
+    def remove_persian_garbage(self, text):
+        for old, new in PERSIAN_GARBAGE.items():
+            text = text.replace(old, new)
+
+        return text
+
+    def remove_nonpersian_alphabet(self, text):
         pass
 
-    def tokenize(self):
-        pass
+    def remove_stopwords(self, tokenized_text: List[str]):
+        return [word for word in tokenized_text if word not in self.stop_words]
 
-    def remove_punctuations(self):
-        pass
+    def stem(self, word: str):
+        return self.stemmer.stem(word)
 
-    def remove_stopwords(self):
-        pass
+    def remove_ZWNJ(self, tokenized_text: List[str]):
+        return [word.replace(u'\u200c', '') for word in tokenized_text]
 
-    def stem(self):
-        pass
-
-    def preprocess(self):
-        pass
+    def preprocess(self, df):
+        preprocessed_df = []
+        for text in df:
+            preprocessed_df.append(self.normalize(text=text))
+        self.preprocessed_df = preprocessed_df
+        return preprocessed_df
 
     def print_result(self):
-        pass
+        print(self.preprocessed_df)
 
-    def handle_query(self):
-        pass
+    def handle_query(self, text):
+        normalized = self.normalize(text=text)
+        print(normalized)
+
+    def from_xml(self, xml_string):
+        """
+        :param xml_string: a string with the xml format
+        :return: texts parsed from the raw xml data
+        """
+        texts = []
+        for child in ET.fromstring(xml_string):
+            for node1 in child:
+                if 'revision' in node1.tag:
+                    for node2 in node1:
+                        if 'text' in node2.tag:
+                            texts.append(node2.text)
+
+        return texts
