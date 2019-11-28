@@ -5,11 +5,12 @@ import string
 
 
 class EnglishProcessor:
-    doc = []
+
+    def __init__(self):
+        self.preprocessed_df = []
 
     def normalize(self, text):
         lowered = text.lower()
-        print(lowered)
         # TODO: put same words in same classes, u.s.a and usa and ...
         removed_puncs = self.remove_punctuations(text=lowered)
         tokenized = self.tokenize(text=removed_puncs)
@@ -34,14 +35,14 @@ class EnglishProcessor:
         return [stemmer.stem(x) for x in ulist]
 
     def preprocess(self, df):
-        doc = []
+        preprocessed_df = []
         for text in df:
-            doc.append(self.normalize(text=text))
-        self.doc = doc
-        return doc
+            preprocessed_df.append(self.normalize(text=text))
+        self.preprocessed_df = preprocessed_df
+        return preprocessed_df
 
     def print_result(self):
-        print(self.doc)
+        print(self.preprocessed_df)
 
     def handle_query(self, text):
         normalized = self.normalize(text=text)

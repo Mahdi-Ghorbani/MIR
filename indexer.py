@@ -1,38 +1,118 @@
+import pickle
+
+
 class Positional:
     # index is mapping from terms to a dictionary which is a mapping from doc_frequency to its number
     # and a dictionary which is a mapping from doc_ids to positions
     # {'hi': {'df': 2, 'posting': {1: [12, 16, 23], 3: [45]}}, 'bye': {'df': 2, 'posting': {1: [34, 43], 17: [15, 90]}}}
-    index = {}
+    def __init__(self, preprocessor):
+        self.preprocessor = preprocessor
+        self.index = {}
 
-    def add(self, term, doc_id, position):
-        pass
+    def add_term(self, term, doc_id, position):
+        normalized = self.preprocessor.normalize(term)
+        if not normalized:
+            return
+        normalized = normalized[0]
+        if normalized in self.index:
+            if doc_id in self.index[normalized]['posting']:
+                self.index[normalized]['posting'][doc_id].append(position)
+            else:
+                self.index[normalized]['df'] += 1
+                self.index[normalized]['posting'][doc_id] = [position]
+        else:
+            self.index[normalized] = {'df': 1, 'posting': {doc_id: [position]}}
 
-    def add_doc(self, doc):
-        pass
+    def add_doc(self, doc, doc_id):
+        tokenized_doc = self.preprocessor.tokenize(doc)
+        begin = 0
+        for term in tokenized_doc:
+            pos = doc.find(term, begin)
+            self.add_term(term=term, doc_id=doc_id, position=pos)
+            begin = pos + len(term)
 
-    def delete(self, term):
-        pass
+    def add_df(self, df):
+        doc_id = 1
+        for doc in df:
+            self.add_doc(doc=doc, doc_id=doc_id)
+            doc_id += 1
 
-    def delete_doc(self, doc):
-        pass
+    def delete_term(self, term, doc_id=-1, position=-1):
+        normalized = self.preprocessor.normalize(term)
+        if not normalized:
+            return
+        normalized = normalized[0]
+        if normalized in self.index:
+            if doc_id == -1:
+                self.index.pop(normalized)
+            elif position == -1:
+                if doc_id in self.index[normalized]['posting']:
+                    self.index[normalized]['df'] -= 1
+                    self.index[normalized]['posting'].pop(doc_id)
+                    if self.index[normalized]['df'] == 0:
+                        self.index.pop(normalized)
+            else:
+                if doc_id in self.index[normalized]['posting']:
+                    self.index[normalized]['posting'][doc_id].remove(position)
+                    if not self.index[normalized]['posting'][doc_id]:
+                        self.index[normalized]['df'] -= 1
+                        self.index[normalized]['posting'].pop(doc_id)
+                        if self.index[normalized]['df'] == 0:
+                            self.index.pop(normalized)
 
-    def save_to_file(self):
-        pass
+    def delete_text(self, doc, doc_id=-1):
+        tokenized_doc = self.preprocessor.tokenize(doc)
+        begin = 0
+        for term in tokenized_doc:
+            pos = doc.find(term, begin)
+            self.delete_term(term=term, doc_id=doc_id, position=pos)
+            begin = pos + len(term)
 
-    def read_from_file(self):
-        pass
+    def delete_doc(self, doc_id):
+        index = self.index.copy()
+        for x in index:
+            if doc_id in self.index[x]['posting']:
+                self.index[x]['df'] -= 1
+                self.index[x]['posting'].pop(doc_id)
+                if self.index[x]['df'] == 0:
+                    self.index.pop(x)
+
+    def delete_df(self, df):
+        doc_id = 1
+        for doc in df:
+            self.delete_text(doc=doc, doc_id=doc_id)
+            doc_id += 1
+
+    def save_to_file(self, name):
+        with open(name, 'wb') as f:
+            pickle.dump(self.index, f)
+            f.close()
+
+    def load_from_file(self, name):
+        with open(name, 'rb') as f:
+            self.index = pickle.load(f)
+            f.close()
 
     def print_result(self):
-        pass
+        print(self.index)
 
-    def handle_query(self):
-        pass
+    def find_posting(self, word):
+        normalized = self.preprocessor.normalize(word)
+        if not normalized:
+            return
+        normalized = normalized[0]
+        if normalized in self.index:
+            print(self.index[normalized]['posting'])
+        else:
+            print("The word is not in the index")
 
 
 class Bigram:
     # index is mapping from 2 character sequences to a term list
     # {'$h': [hello, hi, ...], 'hi': [hi, high, ...], 'i$': [hi, kiwi, wiki, ...]}
-    index = {}
+
+    def __init__(self):
+        self.index = {}
 
     def add(self, term):
         pass
@@ -49,11 +129,11 @@ class Bigram:
     def save_to_file(self):
         pass
 
-    def read_from_file(self):
+    def load_from_file(self):
         pass
 
     def print_result(self):
         pass
 
-    def handle_query(self):
+    def find_position(self):
         pass
