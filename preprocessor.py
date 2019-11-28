@@ -12,13 +12,9 @@ class EnglishProcessor:
         print(lowered)
         # TODO: put same words in same classes, u.s.a and usa and ...
         removed_puncs = self.remove_punctuations(text=lowered)
-        print(removed_puncs)
         tokenized = self.tokenize(text=removed_puncs)
-        print(tokenized)
         removed_stopwords = self.remove_stopwords(tokenized_list=tokenized)
-        print(removed_stopwords)
         stemmed = self.stem(ulist=removed_stopwords)
-        print(stemmed)
         return stemmed
 
     def tokenize(self, text):
