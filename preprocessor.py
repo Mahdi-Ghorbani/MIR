@@ -1,33 +1,60 @@
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+import string
+
+
 class EnglishProcessor:
+    doc = []
 
-    def normalized(self):
-        pass
+    def normalize(self, text):
+        lowered = text.lower()
+        print(lowered)
+        # TODO: put same words in same classes, u.s.a and usa and ...
+        removed_puncs = self.remove_punctuations(text=lowered)
+        print(removed_puncs)
+        tokenized = self.tokenize(text=removed_puncs)
+        print(tokenized)
+        removed_stopwords = self.remove_stopwords(tokenized_list=tokenized)
+        print(removed_stopwords)
+        stemmed = self.stem(ulist=removed_stopwords)
+        print(stemmed)
+        return stemmed
 
-    def tokenize(self):
-        pass
+    def tokenize(self, text):
+        # TODO: do we need to remove numbers here?
+        return word_tokenize(text=text)
+        # TODO: it returns a word multiple times (if it appears multiple times in the text),
+        #  should we store and print it just 1 time or let it to store and print multiple times?
 
-    def remove_punctuations(self):
-        pass
+    def remove_punctuations(self, text):
+        return text.translate(str.maketrans(dict.fromkeys(list(string.punctuation))))
 
-    def remove_stopwords(self):
-        pass
+    def remove_stopwords(self, tokenized_list):
+        return [x for x in tokenized_list if x not in stopwords.words('english')]
 
-    def stem(self):
-        pass
+    def stem(self, ulist):
+        stemmer = PorterStemmer(PorterStemmer.ORIGINAL_ALGORITHM)
+        return [stemmer.stem(x) for x in ulist]
 
-    def preprocess(self):
-        pass
+    def preprocess(self, df):
+        doc = []
+        for text in df:
+            doc.append(self.normalize(text=text))
+        self.doc = doc
+        return doc
 
     def print_result(self):
-        pass
+        print(self.doc)
 
-    def handle_query(self):
-        pass
+    def handle_query(self, text):
+        normalized = self.normalize(text=text)
+        print(normalized)
 
 
 class PersianProcessor:
 
-    def normalized(self):
+    def normalize(self):
         pass
 
     def tokenize(self):
