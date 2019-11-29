@@ -2,7 +2,7 @@ import pandas as pd
 
 from preprocessor import EnglishProcessor, PersianProcessor
 from indexer import Positional, Bigram
-from compressor import GamaCode, VariableByte
+from compressor import GammaCode, VariableByte
 from query_editor import Editor
 from searcher import TF_IDF
 
@@ -12,8 +12,14 @@ if __name__ == '__main__':
     # TODO: Should we take care about the Titles (Not only Text)?
     english_preprocessor.preprocess(english_df['Text'])
 
-    positional_index = Positional(english_preprocessor=english_preprocessor)
+    positional_index = Positional(preprocessor=english_preprocessor)
     positional_index.add_df(english_df['Text'])
+
+    vb_compressor = VariableByte(positional_index=positional_index.index)
+    vb_compressor.compress()
+
+    gm_compressor = GammaCode(positional_index=positional_index.index)
+    gm_compressor.compress()
 
     while True:
         print("Please enter the command number:")
@@ -26,6 +32,14 @@ if __name__ == '__main__':
         print("6. Remove a document by document ID from positional index")
         print("7. Save the positional index in a file")
         print("8. Load a positional index from a file")
+        print("9. Print the variable byte encoded format")
+        print("10. Save the variable byte encoded format in a file")
+        print("11. Load a variable byte encoded format from a file")
+        print("12. Compare between used space before and after variable byte compression")
+        print("13. Print the gamma encoded format")
+        print("14. Save the gamma encoded format in a file")
+        print("15. Load a gamma encoded format from a file")
+        print("16. Compare between used space before and after gamma compression")
         cmd = int(input())
         if cmd == 0:
             break
@@ -57,3 +71,27 @@ if __name__ == '__main__':
             print("Enter the name of the file")
             cmd = input()
             positional_index.load_from_file(cmd)
+        elif cmd == 9:
+            vb_compressor.print_result()
+        elif cmd == 10:
+            print("Enter the name of the file")
+            cmd = input()
+            vb_compressor.save_to_file(cmd)
+        elif cmd == 11:
+            print("Enter the name of the file")
+            cmd = input()
+            vb_compressor.load_from_file(cmd)
+        elif cmd == 12:
+            vb_compressor.print_used_space()
+        elif cmd == 13:
+            gm_compressor.print_result()
+        elif cmd == 14:
+            print("Enter the name of the file")
+            cmd = input()
+            gm_compressor.save_to_file(cmd)
+        elif cmd == 15:
+            print("Enter the name of the file")
+            cmd = input()
+            gm_compressor.load_from_file(cmd)
+        elif cmd == 16:
+            gm_compressor.print_used_space()

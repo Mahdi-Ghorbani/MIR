@@ -28,6 +28,8 @@ class Positional:
         begin = 0
         for term in tokenized_doc:
             pos = doc.find(term, begin)
+            if pos == -1:
+                continue
             self.add_term(term=term, doc_id=doc_id, position=pos)
             begin = pos + len(term)
 
@@ -65,6 +67,8 @@ class Positional:
         begin = 0
         for term in tokenized_doc:
             pos = doc.find(term, begin)
+            if pos == -1:
+                continue
             self.delete_term(term=term, doc_id=doc_id, position=pos)
             begin = pos + len(term)
 
