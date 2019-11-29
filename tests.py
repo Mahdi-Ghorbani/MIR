@@ -2,9 +2,10 @@ from preprocessor import EnglishProcessor, PersianProcessor
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
 import hazm
-from utils import PERSIAN_GARBAGE
+import re
+from pprint import pprint
 
-DEBUG = False
+DEBUG = True
 
 
 def test_persian_preprocessor():
@@ -18,16 +19,17 @@ def test_persian_preprocessor():
     if DEBUG:
         texts = texts[:20]
 
-    texts = [processor.remove_punctuations(text) for text in texts]
     texts = [processor.remove_persian_garbage(text) for text in texts]
+    texts = [processor.remove_nonpersian_alphabet(text) for text in texts]
 
     tokenized_texts = [processor.tokenize(text) for text in texts]
     tokenized_texts = [processor.remove_stopwords(tokenized_text) for tokenized_text in tokenized_texts]
-    stemmed_texts = [[processor.stem(token) for token in tokenized_text] for tokenized_text in tokenized_texts]
+    #tokenized_texts = [processor.remove_ZWNJ(tokenized_text) for tokenized_text in tokenized_texts]
 
-    print(stemmed_texts[0])
-
-    assert len(stemmed_texts) == 1572
+    tokenized_texts = [processor.stem(tokenized_text) for tokenized_text in tokenized_texts]
+    pprint(processor.find_stopwords(tokenized_texts[0]))
 
 
 test_persian_preprocessor()
+
+stemmer = hazm.Stemmer()

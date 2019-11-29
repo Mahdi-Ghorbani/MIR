@@ -4,9 +4,9 @@ from nltk.stem.porter import PorterStemmer
 import string
 import hazm
 import xml.etree.ElementTree as ET
-import reg
+import re
 from typing import List
-from utils import PERSIAN_GARBAGE
+from collections import Counter
 
 
 class EnglishProcessor:
@@ -60,6 +60,31 @@ class PersianProcessor:
         self.word_tokenizer = hazm.WordTokenizer()
         self.stemmer = hazm.Stemmer()
         self.stop_words = hazm.stopwords_list()
+        self.persian_garbage = {u'÷': u'',
+                                u'ٰ': u'',
+                                u'،': ' ',
+                                u'؟': ' ',
+                                u'؛': '',
+                                u'َ': '',
+                                u'ُ': '',
+                                u'ِ': '',
+                                u'ّ': '',
+                                u'ٌ': '',
+                                u'ٍ': '',
+                                u'ئ': u'ی',
+                                u'ي': u'ی',
+                                u'ة': u'ه',
+                                u'ء': u'',
+                                u'ك': u'ک',
+                                u'ْ': u'',
+                                u'أ': u'ا',
+                                u'إ': u'ا',
+                                u'ؤ': u'و',
+                                u'×': u'',
+                                u'٪': u'',
+                                u'٬': u'',
+                                u'آ': u'ا',
+                                u'●': u''}
 
     def normalize(self, text):
         return self.normalizer.normalize(text)
@@ -67,26 +92,30 @@ class PersianProcessor:
     def tokenize(self, text):
         return self.word_tokenizer.tokenize(text)
 
+    def remove_english(self):
+        pass
+
     def remove_punctuations(self, text):
         return text.translate(str.maketrans(dict.fromkeys(list(string.punctuation))))
 
     def remove_persian_garbage(self, text):
-        for old, new in PERSIAN_GARBAGE.items():
+        for old, new in self.persian_garbage.items():
             text = text.replace(old, new)
 
         return text
 
     def remove_nonpersian_alphabet(self, text):
-        pass
+        text = re.sub('[^۰-۹ آ-ی \u200c]', ' ', text)
+        return re.sub('[!?@#$%^&*(),.\-_=+<>/|:;~`"\]\[_]', ' ', text)
 
     def remove_stopwords(self, tokenized_text: List[str]):
         return [word for word in tokenized_text if word not in self.stop_words]
 
-    def stem(self, word: str):
-        return self.stemmer.stem(word)
+    def stem(self, tokenized_text: List[str]):
+        return [self.stemmer.stem(word) for word in tokenized_text]
 
-    def remove_ZWNJ(self, tokenized_text: List[str]):
-        return [word.replace(u'\u200c', '') for word in tokenized_text]
+    # def remove_ZWNJ(self, tokenized_text: List[str]):
+    #     return [word.replace(u'\u200c', ' ') for word in tokenized_text]
 
     def preprocess(self, df):
         preprocessed_df = []
@@ -116,3 +145,7 @@ class PersianProcessor:
                             texts.append(node2.text)
 
         return texts
+
+    def find_stopwords(self, tokenized_text: List[str]):
+        return Counter(tokenized_text)
+
