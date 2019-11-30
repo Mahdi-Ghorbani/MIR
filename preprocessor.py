@@ -3,7 +3,6 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import string
 import hazm
-import xml.etree.ElementTree as ET
 import re
 from typing import List
 from collections import Counter
@@ -86,14 +85,8 @@ class PersianProcessor:
                                 u'آ': u'ا',
                                 u'●': u''}
 
-    def normalize(self, text):
-        return self.normalizer.normalize(text)
-
     def tokenize(self, text):
         return self.word_tokenizer.tokenize(text)
-
-    def remove_english(self):
-        pass
 
     def remove_punctuations(self, text):
         return text.translate(str.maketrans(dict.fromkeys(list(string.punctuation))))
@@ -117,34 +110,25 @@ class PersianProcessor:
     # def remove_ZWNJ(self, tokenized_text: List[str]):
     #     return [word.replace(u'\u200c', ' ') for word in tokenized_text]
 
-    def preprocess(self, df):
-        preprocessed_df = []
-        for text in df:
-            preprocessed_df.append(self.normalize(text=text))
-        self.preprocessed_df = preprocessed_df
-        return preprocessed_df
+    def normalize(self, text: str):
+        """
+        :param text: raw Persian text
+        :return: preprocessed tokenized text
+        """
+        text = self.normalizer.normalize(text)
+        text = self.normalize(text)
+        text = self.remove_persian_garbage(text)
+        text = self.remove_nonpersian_alphabet(text)
 
-    def print_result(self):
-        print(self.preprocessed_df)
+        tokenized_text = self.tokenize(text)
+        tokenized_text = self.remove_stopwords(tokenized_text)
+        tokenized_text = self.stem(tokenized_text)
+
+        return tokenized_text
 
     def handle_query(self, text):
-        normalized = self.normalize(text=text)
-        print(normalized)
-
-    def from_xml(self, xml_string):
-        """
-        :param xml_string: a string with the xml format
-        :return: texts parsed from the raw xml data
-        """
-        texts = []
-        for child in ET.fromstring(xml_string):
-            for node1 in child:
-                if 'revision' in node1.tag:
-                    for node2 in node1:
-                        if 'text' in node2.tag:
-                            texts.append(node2.text)
-
-        return texts
+        preprocessed = self.preprocess(text=text)
+        print(preprocessed)
 
     def find_stopwords(self, tokenized_text: List[str]):
         return Counter(tokenized_text)

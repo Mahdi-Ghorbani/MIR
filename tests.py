@@ -4,32 +4,37 @@ import xml.etree.ElementTree as ET
 import hazm
 import re
 from pprint import pprint
+from utils import from_xml
 
 DEBUG = True
 
 
-def test_persian_preprocessor():
+def test_persian_preprocessor_from_xml(xml_file):
     processor = PersianProcessor()
 
-    with open('data/Persian.xml') as f:
-        content = f.read()
+    with open(xml_file) as f:
+        xml_string = f.read()
 
-    texts = processor.from_xml(content)
+    texts = from_xml(xml_string)
 
     if DEBUG:
         texts = texts[:20]
 
-    texts = [processor.remove_persian_garbage(text) for text in texts]
-    texts = [processor.remove_nonpersian_alphabet(text) for text in texts]
+    preprocessed_texts = [processor.preprocess(text) for text in texts]
 
-    tokenized_texts = [processor.tokenize(text) for text in texts]
-    tokenized_texts = [processor.remove_stopwords(tokenized_text) for tokenized_text in tokenized_texts]
-    #tokenized_texts = [processor.remove_ZWNJ(tokenized_text) for tokenized_text in tokenized_texts]
-
-    tokenized_texts = [processor.stem(tokenized_text) for tokenized_text in tokenized_texts]
-    pprint(processor.find_stopwords(tokenized_texts[0]))
+    pprint(processor.find_stopwords(preprocessed_texts[0]))
 
 
-test_persian_preprocessor()
+def test_persian_preprocessor_from_input_text():
+    """
+    inputs a text in Persian from the user print the preprocessed version of it.
+    """
+    pass
 
-stemmer = hazm.Stemmer()
+
+def test_indexing():
+    pass
+
+
+
+#test_persian_preprocessor('data/Persian.xml')

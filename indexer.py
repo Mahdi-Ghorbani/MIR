@@ -1,4 +1,5 @@
 import pickle
+from utils import get_bigrams
 
 
 class Positional:
@@ -115,14 +116,32 @@ class Bigram:
     # index is mapping from 2 character sequences to a term list
     # {'$h': [hello, hi, ...], 'hi': [hi, high, ...], 'i$': [hi, kiwi, wiki, ...]}
 
-    def __init__(self):
+    def __init__(self, preprocessor):
+        """
+        self.index is a dictionary with bigrams as keys and a set of words in which the bigram
+        apperas as values.
+        :param preprocessor:
+        """
         self.index = {}
+        self.preprocessor = preprocessor
 
     def add(self, term):
         pass
 
-    def add_doc(self, doc):
-        pass
+    def add_doc(self, doc: str):
+        """
+        :param doc: string
+        adds the bigrams in the doc to the index
+        """
+        tokenized_doc = self.preprocessor.normalize(doc)
+
+        for token in tokenized_doc:
+            bigrams = get_bigrams(token)
+            for bigram in bigrams:
+                if bigram in self.index.keys():
+                    self.index[bigram].add(token)
+                else:
+                    self.index[bigram] = {token}  # store the tokens in a set
 
     def delete(self, term):
         pass

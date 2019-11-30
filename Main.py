@@ -3,7 +3,7 @@ import pandas as pd
 from preprocessor import EnglishProcessor, PersianProcessor
 from indexer import Positional, Bigram
 from compressor import GammaCode, VariableByte
-from query_editor import Editor
+from spell_check import Editor
 from searcher import TF_IDF
 
 if __name__ == '__main__':
