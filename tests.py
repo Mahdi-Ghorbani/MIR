@@ -36,5 +36,12 @@ def test_indexing():
     pass
 
 
+def test_spell_checker():
+    pass
+
+
+def test_search():
+    pass
+
 
 #test_persian_preprocessor('data/Persian.xml')

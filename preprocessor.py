@@ -85,8 +85,11 @@ class PersianProcessor:
                                 u'آ': u'ا',
                                 u'●': u''}
 
-    def tokenize(self, text):
+    def tokenize(self, text: str):
         return self.word_tokenizer.tokenize(text)
+
+    def normalize(self, text: str):
+        return self.normalizer.normalize(text)
 
     def remove_punctuations(self, text):
         return text.translate(str.maketrans(dict.fromkeys(list(string.punctuation))))
@@ -110,12 +113,11 @@ class PersianProcessor:
     # def remove_ZWNJ(self, tokenized_text: List[str]):
     #     return [word.replace(u'\u200c', ' ') for word in tokenized_text]
 
-    def normalize(self, text: str):
+    def preprocess(self, text: str):
         """
         :param text: raw Persian text
         :return: preprocessed tokenized text
         """
-        text = self.normalizer.normalize(text)
         text = self.normalize(text)
         text = self.remove_persian_garbage(text)
         text = self.remove_nonpersian_alphabet(text)
