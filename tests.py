@@ -21,7 +21,7 @@ def test_persian_preprocessor_from_xml(xml_file):
     if DEBUG:
         texts = texts[:20]
 
-    preprocessed_texts = [processor.preprocess(text) for text in texts]
+    preprocessed_texts = [processor.normalize(text) for text in texts]
 
     pprint(processor.find_stopwords(preprocessed_texts[0]))
 
@@ -45,5 +45,11 @@ def test_search():
     pass
 
 
+
+
+from itertools import chain
+
+a = [[1, 2, 3], [4, 5, 6]]
+print(list(chain(*a)))
 
 #test_persian_preprocessor('data/Persian.xml')

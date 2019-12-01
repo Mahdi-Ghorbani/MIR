@@ -6,6 +6,9 @@ import hazm
 import re
 from typing import List
 from collections import Counter
+from itertools import chain
+from utils import from_xml
+from tqdm import tqdm
 
 
 class EnglishProcessor:
@@ -52,6 +55,7 @@ class EnglishProcessor:
 
 class PersianProcessor:
     def __init__(self):
+        self.preprocessed_docs = []
         self.normalizer = hazm.Normalizer()
         self.word_tokenizer = hazm.WordTokenizer()
         self.stemmer = hazm.Stemmer()
@@ -117,8 +121,8 @@ class PersianProcessor:
         text = self.remove_nonpersian_alphabet(text)
 
         tokenized_text = self.tokenize(text)
-        tokenized_text = self.remove_stopwords(tokenized_text)
         tokenized_text = self.stem(tokenized_text)
+        tokenized_text = self.remove_stopwords(tokenized_text)
 
         return tokenized_text
 
@@ -126,6 +130,20 @@ class PersianProcessor:
         preprocessed = self.normalize(text=text)
         print(preprocessed)
 
-    def find_stopwords(self, tokenized_text: List[str]):
-        return Counter(tokenized_text)
+    def preprocess_xml_docs(self, docs):
+        with tqdm(total=len(docs)) as pbar:
+            for doc in docs:
+                preprocessed_doc = self.normalize(doc)
+                self.preprocessed_docs.append(preprocessed_doc)
+                pbar.update(1)
+        pbar.close()
+        return self.preprocessed_docs
+
+    def find_stopwords(self, doc=None):
+        if doc is None:
+            all_words = list(chain(*self.preprocessed_docs))
+            return Counter(all_words)
+        else:
+            tokens = self.normalize(doc)
+            return Counter(tokens)
 

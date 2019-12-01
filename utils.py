@@ -3,11 +3,14 @@ from typing import Set
 from editdistance import distance
 
 
-def from_xml(xml_string):
+def from_xml(xml_file):
     """
     :param xml_string: a string with the xml format
     :return: texts parsed from the raw xml data
     """
+    with open(xml_file) as f:
+        xml_string = f.read()
+
     texts = []
     for child in ET.fromstring(xml_string):
         for node1 in child:
