@@ -11,17 +11,34 @@ class VariableByte:
 
     def vb_encode(self, number):
         vb = []
+        flag = True
         while True:
             binary = bin(number % 128)[2:]
             number = number // 128
-            if number == 0:
+            if flag:
                 binary = '1' + '0' * (8 - len(binary) - 1) + binary
                 vb.append(int(binary, 2))
-                break
+                flag = False
             else:
                 binary = '0' * (8 - len(binary)) + binary
                 vb.append(int(binary, 2))
+            if number == 0:
+                break
+        vb.reverse()
         return bytes(vb)
+
+    def vb_decode(self, code):
+        x = int.from_bytes(code, 'big')
+        bin_string = ''
+        while True:
+            binary = bin(x % 256)[2:]
+            if len(binary) == 8:
+                bin_string = binary[1:] + bin_string
+            else:
+                bin_string = binary + bin_string
+            x = x // 256
+            if x == 0:
+                return int(bin_string, 2)
 
     def compress(self):
         # compressed is a mapping from term to a dictionary which is a mapping from df to its value and
@@ -50,6 +67,32 @@ class VariableByte:
                     prev_pos = pos
         self.compressed = compressed
         return compressed
+
+    def decompress(self):
+        index = {}
+        for term in self.compressed:
+            index[term] = {'df': self.compressed[term]['df'], 'posting': {}}
+            byte_array = []
+            prev_value = 0
+            cnt = 0
+            for byte in self.compressed[term]['posting'][0]:
+                byte_array.append(byte)
+                if len(bin(byte)[2:]) == 8:
+                    doc_id = self.vb_decode(bytes(byte_array)) + prev_value
+                    index[term]['posting'][doc_id] = []
+                    prev_value = doc_id
+                    byte_array.clear()
+                    pos_byte_array = []
+                    prev_pos = 0
+                    for byte_ in self.compressed[term]['posting'][1][cnt]:
+                        pos_byte_array.append(byte_)
+                        if len(bin(byte)[2:]) == 8:
+                            position = self.vb_decode(bytes(pos_byte_array)) + prev_pos
+                            index[term]['posting'][doc_id].append(position)
+                            prev_pos = position
+                            pos_byte_array.clear()
+                    cnt += 1
+        return index
 
     def save_to_file(self, name):
         with open(name, 'wb') as f:
