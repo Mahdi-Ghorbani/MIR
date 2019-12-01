@@ -29,7 +29,7 @@ if __name__ == '__main__':
         print("Please enter the command number:")
         print("0. Exit")
         print("1. Print the English frequent words from csv file")
-        print("2. Input a text and get the words after preprocessing")
+        print("2. Input a text and get the tokens after preprocessing")
         print("3. Print the English positional index")
         print("4. Print posting list of a word in positional index")
         print("5. Remove terms of a arbitrary text from positional index")
@@ -48,16 +48,22 @@ if __name__ == '__main__':
         print("18. print preprocessed persian xml texts")
         print("19. Find frequent words in persian xml docs")
         print("20. Find frequent words in an input text")
+        print("21. Print the English frequent words from input text")
+        print("22. Print the English bigram index")
 
         cmd = int(input())
         if cmd == 0:
             break
         elif cmd == 1:
-            english_preprocessor.print_result()
+            _ = english_preprocessor.preprocess(english_df)
+            words = english_preprocessor.find_stopwords()
+            words = [(word, freq) for word, freq in words.items()]
+            words = sorted(words, key=lambda x: x[1], reverse=True)
+            print(words[:20])
         elif cmd == 2:
             print("Enter the text")
             cmd = input()
-            english_preprocessor.handle_query(cmd)
+            print(english_preprocessor.handle_query(cmd))
         elif cmd == 3:
             positional_index.print_result()
         elif cmd == 4:
@@ -114,8 +120,18 @@ if __name__ == '__main__':
         elif cmd == 19:
             _ = persian_preprocessor.preprocess_xml_docs(persian_docs)
             words = persian_preprocessor.find_stopwords()
-            words = [(word, freq) for word in ]
+            words = [(word, freq) for word, freq in words.items()]
+            words = sorted(words, key= lambda x: x[1], reverse=True)
+            print(words[:30])
             break
         elif cmd == 20:
             text = input()
             persian_preprocessor.find_stopwords(text)
+        elif cmd == 21:
+            print('Input a text:')
+            text = input()
+            words = english_preprocessor.find_stopwords(text)
+            words = [(word, freq) for word, freq in words.items()]
+            words = sorted(words, key=lambda x: x[1], reverse=True)
+            print(words[:20])
+        elif cmd == 22:

@@ -126,9 +126,6 @@ class Bigram:
         self.preprocessor = preprocessor
         self.positional_index = positional_index
 
-    def add(self, term):
-        pass
-
     def add_doc(self, doc: str):
         """
         :param doc: string
