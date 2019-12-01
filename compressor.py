@@ -46,14 +46,17 @@ class VariableByte:
         # {'hi': {'df': 2, 'posting': {1: [2, 5], 3: [7, 13]}}}  ---->
         # {'hi': {'df': 2, 'posting': [\x81 \x82, [\x82 \x83, \x87 \x86]]}}
         compressed = {}
+        print(self.index)
         for term in self.index:
             compressed[term] = {'df': self.index[term]['df'], 'posting': [bytes(0), []]}
             prev_doc = -1
+            print(0)
             for doc_id in self.index[term]['posting']:
                 if prev_doc == -1:
                     enc = self.vb_encode(doc_id)
                 else:
                     enc = self.vb_encode(doc_id - prev_doc)
+                print(1)
                 compressed[term]['posting'][0] += enc
                 prev_doc = doc_id
                 prev_pos = -1
@@ -63,8 +66,12 @@ class VariableByte:
                     else:
                         compressed[term]['posting'][1][len(compressed[term]['posting'][1]) - 1] += \
                             self.vb_encode(pos - prev_pos)
+                    print(2)
                     prev_pos = pos
+            print(compressed)
+        print("SASASASAAS")
         self.compressed = compressed
+        print('here')
         return compressed
 
     def decompress(self):

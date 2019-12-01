@@ -24,9 +24,7 @@ def from_xml(xml_file):
 
 def jaccard_similarity(A: Set, B: Set):
     union = A.union(B)
-    print(union)
     intersection = A.intersection(B)
-    print(intersection)
 
     return len(intersection) / len(union)
 

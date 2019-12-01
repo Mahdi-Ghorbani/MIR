@@ -41,7 +41,7 @@ if __name__ == '__main__':
         print("14. Save the gamma encoded format in a file")
         print("15. Load a gamma encoded format from a file")
         print("16. Compare between used space before and after gamma compression")
-        print("17. Normalize an input text")
+        print("17. Normalize an input Persian text")
         print("18. print preprocessed persian xml texts")
         print("19. Find frequent words in persian xml docs")
         print("20. Find frequent words in an input text")
@@ -51,6 +51,7 @@ if __name__ == '__main__':
         print("24. Print the Persian bigram index")
         print("25. English spellchecker")
         print("26. Remove document from bigram index")
+        print("27. Search in the vector space")
 
         cmd = int(input())
         if cmd == 0:
@@ -232,7 +233,7 @@ if __name__ == '__main__':
             bigram.add_docs(persian_docs)
             bigram.print_result()
 
-        elif cmd==25:
+        elif cmd == 25:
             positional_index = Positional(preprocessor=english_preprocessor)
 
             if DEBUG:
@@ -242,7 +243,9 @@ if __name__ == '__main__':
             bigram = Bigram(preprocessor=english_preprocessor, positional_index=positional_index)
             bigram.add_docs(english_df['Text'])
             spell_checker = SpellChecker(english_preprocessor, bigram_index=bigram)
-            spell_checker.correct_query('Hay Bey!')
+            print(spell_checker.correct_query('Hay Bey!'))
+            break
+
         elif cmd==26:
             pass
 
