@@ -45,11 +45,32 @@ def test_search():
     pass
 
 
+persian_garbage = {u'÷': u'',
+                        u'ٰ': u'',
+                        u'،': ' ',
+                        u'؟': ' ',
+                        u'؛': '',
+                        u'َ': '',
+                        u'ُ': '',
+                        u'ِ': '',
+                        u'ّ': '',
+                        u'ٌ': '',
+                        u'ٍ': '',
+                        u'ئ': u'ی',
+                        u'ي': u'ی',
+                        u'ة': u'ه',
+                        u'ء': u'',
+                        u'ك': u'ک',
+                        u'ْ': u'',
+                        u'أ': u'ا',
+                        u'إ': u'ا',
+                        u'ؤ': u'و',
+                        u'×': u'',
+                        u'٪': u'',
+                        u'٬': u'',
+                        u'آ': u'ا',
+                        u'●': u''}
 
 
-from itertools import chain
-
-a = [[1, 2, 3], [4, 5, 6]]
-print(list(chain(*a)))
 
 #test_persian_preprocessor('data/Persian.xml')

@@ -18,7 +18,6 @@ class EnglishProcessor:
 
     def normalize(self, text):
         lowered = text.lower()
-        # TODO: put same words in same classes, u.s.a and usa and ...
         removed_puncs = self.remove_punctuations(text=lowered)
         tokenized = self.tokenize(text=removed_puncs)
         removed_stopwords = self.remove_stopwords(tokenized_list=tokenized)
@@ -39,18 +38,30 @@ class EnglishProcessor:
         return [stemmer.stem(x) for x in ulist]
 
     def preprocess(self, df):
-        preprocessed_df = []
-        for text in df:
-            preprocessed_df.append(self.normalize(text=text))
-        self.preprocessed_df = preprocessed_df
-        return preprocessed_df
+        self.preprocessed_df = []
+
+        with tqdm(total=len(df['Text'])) as pbar:
+            for text in df['Text']:
+                self.preprocessed_df.append(self.normalize(text=text))
+                pbar.update(n=1)
+        pbar.close()
+
+        return self.preprocessed_df
 
     def print_result(self):
         print(self.preprocessed_df)
 
+    def find_stopwords(self, doc=None):
+        if doc is None:
+            all_words = list(chain(*self.preprocessed_df))
+            return Counter(all_words)
+        else:
+            tokens = self.normalize(doc)
+            return Counter(tokens)
+
     def handle_query(self, text):
         normalized = self.normalize(text=text)
-        print(normalized)
+        return normalized
 
 
 class PersianProcessor:

@@ -1,5 +1,8 @@
 import pickle
 from utils import get_bigrams
+from typing import List
+from tqdm import tqdm
+from pprint import pprint
 
 
 class Positional:
@@ -34,11 +37,12 @@ class Positional:
             self.add_term(term=term, doc_id=doc_id, position=pos)
             begin = pos + len(term)
 
-    def add_df(self, df):
-        doc_id = 1
-        for doc in df:
-            self.add_doc(doc=doc, doc_id=doc_id)
-            doc_id += 1
+    def add_docs(self, docs):
+        with tqdm(total=len(docs)) as pbar:
+            for doc_id, doc in enumerate(docs):
+                self.add_doc(doc=doc, doc_id=doc_id+1)
+                pbar.update(n=1)
+        pbar.close()
 
     def delete_term(self, term, doc_id=-1, position=-1):
         normalized = self.preprocessor.normalize(term)
@@ -99,7 +103,7 @@ class Positional:
             f.close()
 
     def print_result(self):
-        print(self.index)
+        pprint(self.index)
 
     def find_posting(self, word):
         normalized = self.preprocessor.normalize(word)
@@ -126,8 +130,10 @@ class Bigram:
         self.preprocessor = preprocessor
         self.positional_index = positional_index
 
-    def add(self, term):
-        pass
+    def add_docs(self, docs: List[str]):
+        for doc in docs:
+            self.add_doc(doc)
+
 
     def add_doc(self, doc: str):
         """
@@ -144,7 +150,7 @@ class Bigram:
                 else:
                     self.index[bigram] = {token}  # store the tokens in a set
 
-    def delete(self, term):
+    def delete_term(self, term):
         if term not in self.positional_index.keys():
             bigrams = get_bigrams(term)
             for bigram in bigrams:
@@ -156,7 +162,7 @@ class Bigram:
     def delete_doc(self, doc):
         terms = self.preprocessor.tokenize(doc)
         for term in terms:
-            self.delete(term)
+            self.delete_term(term)
 
     def save_to_file(self, name):
         with open(name, 'wb') as f:
@@ -169,4 +175,4 @@ class Bigram:
             f.close()
 
     def print_result(self):
-        print(self.index)
+        pprint(self.index)
