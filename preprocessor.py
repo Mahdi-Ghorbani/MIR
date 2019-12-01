@@ -40,7 +40,7 @@ class EnglishProcessor:
     def preprocess(self, df):
         self.preprocessed_df = []
 
-        with tqdm(total=len(df['Text'])) as pbar:
+        with tqdm(total=len(df)) as pbar:
             for text in df['Text']:
                 self.preprocessed_df.append(self.normalize(text=text))
                 pbar.update(n=1)

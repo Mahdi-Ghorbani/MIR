@@ -3,7 +3,7 @@ from typing import Dict
 
 
 class SpellChecker:
-    def __init__(self, preprocessor, bigram_index: Dict):
+    def __init__(self, preprocessor, bigram_index):
         self.preprocessor = preprocessor
         self.bigram_index = bigram_index
 

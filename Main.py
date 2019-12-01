@@ -29,7 +29,7 @@ if __name__ == '__main__':
         print("2. Input a text and get the tokens after preprocessing")
         print("3. Print the English positional index")
         print("4. Print posting list of a word in positional index")
-        print("5. Remove terms of a arbitrary text from positional index")
+        print("5. ")
         print("6. Remove a document by document ID from positional index")
         print("7. Save the positional index in a file")
         print("8. Load a positional index from a file")
@@ -50,6 +50,7 @@ if __name__ == '__main__':
         print("23. Print the Persian positional index")
         print("24. Print the Persian bigram index")
         print("25. English spellchecker")
+        print("26. Remove document from bigram index")
 
         cmd = int(input())
         if cmd == 0:
@@ -65,6 +66,8 @@ if __name__ == '__main__':
             cmd = input()
             print(english_preprocessor.handle_query(cmd))
         elif cmd == 3:
+            if DEBUG:
+                english_df = english_df[:20]
             positional_index = Positional(preprocessor=english_preprocessor)
             positional_index.add_docs(english_df['Text'])
             positional_index.print_result()
@@ -72,46 +75,87 @@ if __name__ == '__main__':
         elif cmd == 4:
             print("Enter the word")
             cmd = input()
+
+            DEBUG = False
+
+            if DEBUG:
+                english_df = english_df[:20]
+
+            positional_index = Positional(preprocessor=english_preprocessor)
+            positional_index.add_docs(english_df['Text'])
             positional_index.find_posting(cmd)
+            break
         elif cmd == 5:
-            print("Enter the text")
-            cmd = input()
-            positional_index.delete_text(cmd)
+            pass
+            # print("Enter the text")
+            # cmd = input()
+            # positional_index = Positional(preprocessor=english_preprocessor)
+            # positional_index.delete_text(cmd)
         elif cmd == 6:
             print("Enter the document ID")
             cmd = int(input())
+            positional_index = Positional(preprocessor=english_preprocessor)
+            positional_index.add_docs(english_df['Text'])
             positional_index.delete_doc(cmd)
         elif cmd == 7:
             print("Enter the name of the file")
             cmd = input()
+            positional_index = Positional(preprocessor=english_preprocessor)
+            positional_index.add_docs(english_df['Text'])
             positional_index.save_to_file(cmd)
         elif cmd == 8:
             print("Enter the name of the file")
             cmd = input()
+            positional_index = Positional(preprocessor=english_preprocessor)
             positional_index.load_from_file(cmd)
         elif cmd == 9:
+            positional_index = Positional(preprocessor=english_preprocessor)
+            positional_index.add_docs(english_df['Text'])
+            vb_compressor = VariableByte(positional_index=positional_index.index)
+            vb_compressor.compress()
             vb_compressor.print_result()
         elif cmd == 10:
             print("Enter the name of the file")
             cmd = input()
+            positional_index = Positional(preprocessor=english_preprocessor)
+            positional_index.add_docs(english_df['Text'])
+            vb_compressor = VariableByte(positional_index=positional_index.index)
+            vb_compressor.compress()
             vb_compressor.save_to_file(cmd)
         elif cmd == 11:
             print("Enter the name of the file")
             cmd = input()
+            positional_index = Positional(preprocessor=english_preprocessor)
+            vb_compressor = VariableByte(positional_index=positional_index.index)
             vb_compressor.load_from_file(cmd)
         elif cmd == 12:
+            positional_index = Positional(preprocessor=english_preprocessor)
+            positional_index.add_docs(english_df['Text'])
+            vb_compressor = VariableByte(positional_index=positional_index.index)
+            vb_compressor.compress()
             vb_compressor.print_used_space()
         elif cmd == 13:
+            positional_index = Positional(preprocessor=english_preprocessor)
+            positional_index.add_docs(english_df['Text'])
+            gm_compressor = GammaCode(positional_index=positional_index.index)
+            gm_compressor.compress()
             gm_compressor.print_result()
         elif cmd == 14:
             print("Enter the name of the file")
             cmd = input()
+            positional_index = Positional(preprocessor=english_preprocessor)
+            gm_compressor = GammaCode(positional_index=positional_index.index)
+            gm_compressor.compress()
             gm_compressor.save_to_file(cmd)
         elif cmd == 15:
             print("Enter the name of the file")
             cmd = input()
+            gm_compressor = GammaCode(positional_index=positional_index.index)
+            gm_compressor.compress()
             gm_compressor.load_from_file(cmd)
         elif cmd == 16:
+            gm_compressor = GammaCode(positional_index=positional_index.index)
+            gm_compressor.compress()
             gm_compressor.print_used_space()
         elif cmd == 17:
             text = input()
@@ -148,7 +192,6 @@ if __name__ == '__main__':
             break
         elif cmd == 23:
             positional_index = Positional(preprocessor=persian_preprocessor)
-
             if DEBUG:
                 persian_docs = persian_docs[:20]
 
@@ -166,5 +209,18 @@ if __name__ == '__main__':
             bigram.print_result()
 
         elif cmd==25:
+            positional_index = Positional(preprocessor=english_preprocessor)
+
+            if DEBUG:
+                english_df = english_df[:20]
+
+            positional_index.add_docs(english_df['Text'])
+            bigram = Bigram(preprocessor=english_preprocessor, positional_index=positional_index)
+            bigram.add_docs(english_df['Text'])
+            spell_checker = SpellChecker(english_preprocessor, bigram_index=bigram)
+            spell_checker.correct_query('Hay Bey!')
+        elif cmd==26:
+            pass
+
 
 
