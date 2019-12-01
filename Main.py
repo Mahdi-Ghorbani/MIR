@@ -95,12 +95,20 @@ if __name__ == '__main__':
             print("Enter the document ID")
             cmd = int(input())
             positional_index = Positional(preprocessor=english_preprocessor)
+
+            if DEBUG:
+                english_df = english_df[:20]
+
             positional_index.add_docs(english_df['Text'])
             positional_index.delete_doc(cmd)
         elif cmd == 7:
             print("Enter the name of the file")
             cmd = input()
             positional_index = Positional(preprocessor=english_preprocessor)
+
+            if DEBUG:
+                english_df = english_df[:20]
+
             positional_index.add_docs(english_df['Text'])
             positional_index.save_to_file(cmd)
         elif cmd == 8:
@@ -110,6 +118,10 @@ if __name__ == '__main__':
             positional_index.load_from_file(cmd)
         elif cmd == 9:
             positional_index = Positional(preprocessor=english_preprocessor)
+
+            if DEBUG:
+                english_df = english_df[:20]
+
             positional_index.add_docs(english_df['Text'])
             vb_compressor = VariableByte(positional_index=positional_index.index)
             vb_compressor.compress()
@@ -118,6 +130,10 @@ if __name__ == '__main__':
             print("Enter the name of the file")
             cmd = input()
             positional_index = Positional(preprocessor=english_preprocessor)
+
+            if DEBUG:
+                english_df = english_df[:20]
+
             positional_index.add_docs(english_df['Text'])
             vb_compressor = VariableByte(positional_index=positional_index.index)
             vb_compressor.compress()
@@ -130,12 +146,20 @@ if __name__ == '__main__':
             vb_compressor.load_from_file(cmd)
         elif cmd == 12:
             positional_index = Positional(preprocessor=english_preprocessor)
+
+            if DEBUG:
+                english_df = english_df[:20]
+
             positional_index.add_docs(english_df['Text'])
             vb_compressor = VariableByte(positional_index=positional_index.index)
             vb_compressor.compress()
             vb_compressor.print_used_space()
         elif cmd == 13:
             positional_index = Positional(preprocessor=english_preprocessor)
+
+            if DEBUG:
+                english_df = english_df[:20]
+
             positional_index.add_docs(english_df['Text'])
             gm_compressor = GammaCode(positional_index=positional_index.index)
             gm_compressor.compress()
