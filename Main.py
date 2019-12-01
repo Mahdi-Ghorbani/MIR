@@ -121,7 +121,7 @@ if __name__ == '__main__':
             positional_index = Positional(preprocessor=english_preprocessor)
 
             if DEBUG:
-                english_df = english_df[:20]
+                english_df = english_df[:50]
 
             positional_index.add_docs(english_df['Text'])
             vb_compressor = VariableByte(positional_index=positional_index.index)

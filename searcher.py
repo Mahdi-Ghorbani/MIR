@@ -14,7 +14,7 @@ class TF_IDF:
         self._create_tfidf_matrix()
 
     def find_docs(self, query: str):
-        tokenized_query = self.preprocessor.normalize()
+        tokenized_query = self.preprocessor.normalize(query)
 
         query_vector = np.zeros([len(self.index)])
 
@@ -54,7 +54,7 @@ class TF_IDF:
             for doc_id, occurs in value['posting'].keys():
                 self.tf_idf_matrix[self.token2id[token], doc_id - 1] = (1 + np.log(occurs)) / idf
 
-        self.tf_idf_matrix /= np.sqrt(np.sum(self.tf_idf_matrix.sum ** 2, axis=0, keepdims=True))
+        self.tf_idf_matrix /= np.sqrt(np.sum(self.tf_idf_matrix.sum() ** 2, axis=0, keepdims=True))
 
 
     def search(self, query):

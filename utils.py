@@ -8,7 +8,7 @@ def from_xml(xml_file):
     :param xml_string: a string with the xml format
     :return: texts parsed from the raw xml data
     """
-    with open(xml_file) as f:
+    with open(xml_file, 'r', encoding='utf-8') as f:
         xml_string = f.read()
 
     texts = []
