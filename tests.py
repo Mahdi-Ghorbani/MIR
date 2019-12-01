@@ -5,6 +5,7 @@ import hazm
 import re
 from pprint import pprint
 from utils import from_xml
+from collections import Counter
 
 DEBUG = True
 
@@ -42,6 +43,7 @@ def test_spell_checker():
 
 def test_search():
     pass
+
 
 
 #test_persian_preprocessor('data/Persian.xml')

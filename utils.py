@@ -35,3 +35,6 @@ def edit_distance(str1: str, str2: str):
 def get_bigrams(token: str):
     token = "$" + token + "$"
     return [token[i:i+2] for i in range(len(token) - 1)]
+
+def tf_idf():
+    pass
