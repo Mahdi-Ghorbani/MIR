@@ -74,7 +74,7 @@ class Positional:
             begin = pos + len(term)
 
     def delete_doc(self, doc_id):
-        index = self.index.copy()
+        index = self.preprocessor.tokenize(self.index.copy())
         for x in index:
             if doc_id in self.index[x]['posting']:
                 self.index[x]['df'] -= 1
@@ -116,7 +116,7 @@ class Bigram:
     # index is mapping from 2 character sequences to a term list
     # {'$h': [hello, hi, ...], 'hi': [hi, high, ...], 'i$': [hi, kiwi, wiki, ...]}
 
-    def __init__(self, preprocessor):
+    def __init__(self, preprocessor, positional_index):
         """
         self.index is a dictionary with bigrams as keys and a set of words in which the bigram
         apperas as values.
@@ -124,6 +124,7 @@ class Bigram:
         """
         self.index = {}
         self.preprocessor = preprocessor
+        self.positional_index = positional_index
 
     def add(self, term):
         pass
@@ -144,19 +145,28 @@ class Bigram:
                     self.index[bigram] = {token}  # store the tokens in a set
 
     def delete(self, term):
-        pass
+        if term not in self.positional_index.keys():
+            bigrams = get_bigrams(term)
+            for bigram in bigrams:
+                if term in self.index[bigram]:
+                    self.index[bigram].remove(term)
+                    if not self.index[bigram]:
+                        self.index.pop(bigram)
 
     def delete_doc(self, doc):
-        pass
+        terms = self.preprocessor.tokenize(doc)
+        for term in terms:
+            self.delete(term)
 
-    def save_to_file(self):
-        pass
+    def save_to_file(self, name):
+        with open(name, 'wb') as f:
+            pickle.dump(self.index, f)
+            f.close()
 
-    def load_from_file(self):
-        pass
+    def load_from_file(self, name):
+        with open(name, 'rb') as f:
+            self.index = pickle.load(f)
+            f.close()
 
     def print_result(self):
-        pass
-
-    def find_position(self):
-        pass
+        print(self.index)

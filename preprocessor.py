@@ -23,10 +23,7 @@ class EnglishProcessor:
         return stemmed
 
     def tokenize(self, text):
-        # TODO: do we need to remove numbers here?
         return word_tokenize(text=text)
-        # TODO: it returns a word multiple times (if it appears multiple times in the text),
-        #  should we store and print it just 1 time or let it to store and print multiple times?
 
     def remove_punctuations(self, text):
         return text.translate(str.maketrans(dict.fromkeys(list(string.punctuation))))
@@ -88,9 +85,6 @@ class PersianProcessor:
     def tokenize(self, text: str):
         return self.word_tokenizer.tokenize(text)
 
-    def normalize(self, text: str):
-        return self.normalizer.normalize(text)
-
     def remove_punctuations(self, text):
         return text.translate(str.maketrans(dict.fromkeys(list(string.punctuation))))
 
@@ -113,12 +107,12 @@ class PersianProcessor:
     # def remove_ZWNJ(self, tokenized_text: List[str]):
     #     return [word.replace(u'\u200c', ' ') for word in tokenized_text]
 
-    def preprocess(self, text: str):
+    def normalize(self, text: str):
         """
         :param text: raw Persian text
         :return: preprocessed tokenized text
         """
-        text = self.normalize(text)
+        text = self.normalizer.normalize(text)
         text = self.remove_persian_garbage(text)
         text = self.remove_nonpersian_alphabet(text)
 
@@ -129,7 +123,7 @@ class PersianProcessor:
         return tokenized_text
 
     def handle_query(self, text):
-        preprocessed = self.preprocess(text=text)
+        preprocessed = self.normalize(text=text)
         print(preprocessed)
 
     def find_stopwords(self, tokenized_text: List[str]):

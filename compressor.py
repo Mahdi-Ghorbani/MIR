@@ -79,7 +79,7 @@ class GammaCode:
 
     def gamma_encode(self, number):
         # TODO: with bitarray we use more space than the normal index, we should find a better way for implementing it
-        #  to use really less size, I don't know what we can do
+        #         #  to use really less size, I don't know what we can do
         if number == 1:
             return bitarray('0')
         binary = bin(number)[2:]
