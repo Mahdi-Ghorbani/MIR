@@ -8,16 +8,13 @@ from searcher import TF_IDF
 from utils import from_xml
 from pprint import pprint
 
+DEBUG = True
+
 if __name__ == '__main__':
     english_df = pd.read_csv('data/English.csv')
     persian_docs = from_xml('data/Persian.xml')
     english_preprocessor = EnglishProcessor()
     persian_preprocessor = PersianProcessor()
-
-    #english_preprocessor.preprocess(english_df['Text'])
-
-    #positional_index = Positional(preprocessor=english_preprocessor)
-    #positional_index.add_df(english_df['Text'])
 
     #vb_compressor = VariableByte(positional_index=positional_index.index)
     #vb_compressor.compress()
@@ -50,6 +47,9 @@ if __name__ == '__main__':
         print("20. Find frequent words in an input text")
         print("21. Print the English frequent words from input text")
         print("22. Print the English bigram index")
+        print("23. Print the Persian positional index")
+        print("24. Print the Persian bigram index")
+        print("25. English spellchecker")
 
         cmd = int(input())
         if cmd == 0:
@@ -65,7 +65,10 @@ if __name__ == '__main__':
             cmd = input()
             print(english_preprocessor.handle_query(cmd))
         elif cmd == 3:
+            positional_index = Positional(preprocessor=english_preprocessor)
+            positional_index.add_docs(english_df['Text'])
             positional_index.print_result()
+            break
         elif cmd == 4:
             print("Enter the word")
             cmd = input()
@@ -135,3 +138,33 @@ if __name__ == '__main__':
             words = sorted(words, key=lambda x: x[1], reverse=True)
             print(words[:20])
         elif cmd == 22:
+            positional_index = Positional(preprocessor=english_preprocessor)
+            if DEBUG:
+                persian_docs = persian_docs[:20]
+            positional_index.add_docs(persian_docs)
+            bigram = Bigram(preprocessor=english_preprocessor, positional_index=positional_index)
+            bigram.add_docs(persian_docs)
+            bigram.print_result()
+            break
+        elif cmd == 23:
+            positional_index = Positional(preprocessor=persian_preprocessor)
+
+            if DEBUG:
+                persian_docs = persian_docs[:20]
+
+            positional_index.add_docs(persian_docs)
+            positional_index.print_result()
+        elif cmd == 24:
+            positional_index = Positional(preprocessor=persian_preprocessor)
+
+            if DEBUG:
+                persian_docs = persian_docs[:20]
+
+            positional_index.add_docs(persian_docs)
+            bigram = Bigram(preprocessor=persian_preprocessor, positional_index=positional_index)
+            bigram.add_docs(persian_docs)
+            bigram.print_result()
+
+        elif cmd==25:
+
+
