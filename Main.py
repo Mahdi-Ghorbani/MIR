@@ -50,8 +50,7 @@ if __name__ == '__main__':
         print("23. Print the Persian positional index")
         print("24. Print the Persian bigram index")
         print("25. English spellchecker")
-        print("26. Remove document from bigram index")
-        print("27. Search in the vector space")
+        print("26. Search in the vector space")
 
         cmd = int(input())
         if cmd == 0:
@@ -236,6 +235,8 @@ if __name__ == '__main__':
         elif cmd == 25:
             positional_index = Positional(preprocessor=english_preprocessor)
 
+            DEBUG = False
+
             if DEBUG:
                 english_df = english_df[:20]
 
@@ -246,8 +247,20 @@ if __name__ == '__main__':
             print(spell_checker.correct_query('Hay Bey!'))
             break
 
-        elif cmd==26:
-            pass
+        elif cmd == 26:
+            positional_index = Positional(preprocessor=english_preprocessor)
+
+            DEBUG = True
+
+            if DEBUG:
+                english_df = english_df[:20]
+
+            positional_index.add_docs(english_df['Text'])
+            searcher = TF_IDF(positional_index, english_preprocessor)
+            query = "PARMALAT, the bankrupt Italian food company, is suing outside auditors Grant Thornton and Deloitte  amp; Touche, seeking 5.5 billion in damages."
+            print(searcher.search(query))
+            break
+
 
 
 
