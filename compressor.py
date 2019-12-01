@@ -1,6 +1,5 @@
 import pickle
 from sys import getsizeof
-from bitarray import bitarray
 
 
 class VariableByte:
@@ -121,13 +120,39 @@ class GammaCode:
         self.compressed = {}
 
     def gamma_encode(self, number):
-        # TODO: with bitarray we use more space than the normal index, we should find a better way for implementing it
-        #         #  to use really less size, I don't know what we can do
         if number == 1:
-            return bitarray('0')
+            return [0]
         binary = bin(number)[2:]
         gamma_str = '1' * (len(binary) - 1) + '0' + binary[1:]
-        return bitarray(gamma_str)
+        res = []
+        while True:
+            if len(gamma_str) >= 32:
+                res.append(int(gamma_str[0:31], 2))
+                gamma_str = gamma_str[32:]
+            else:
+                res.append(int(gamma_str, 2))
+                break
+        return res
+
+    def gamma_decode(self, code):
+        string_res = ''
+        res = []
+        for x in code:
+            string_res += bin(x)[2:]
+        cnt = 0
+        prev_x = -1
+        i = 0
+        while i < len(string_res):
+            if string_res[i] == '1':
+                cnt += 1
+                i += 1
+            else:
+                x = int('1' + string_res[i + 1: i + cnt + 1], 2) + prev_x
+                res.append(x)
+                prev_x = x
+                i = i + cnt + 1
+                cnt = 0
+        return res
 
     def compress(self):
         # compressed is a mapping from term to a dictionary which is a mapping from df to its value and
@@ -139,14 +164,14 @@ class GammaCode:
         # {'hi': {'df': 2, 'posting': [0 100, [101 101, 1110000 11010]]}}
         compressed = {}
         for term in self.index:
-            compressed[term] = {'df': self.index[term]['df'], 'posting': [bitarray(), []]}
+            compressed[term] = {'df': self.index[term]['df'], 'posting': [[], []]}
             prev_doc = -1
             for doc_id in self.index[term]['posting']:
                 if prev_doc == -1:
                     enc = self.gamma_encode(doc_id)
                 else:
                     enc = self.gamma_encode(doc_id - prev_doc)
-                compressed[term]['posting'][0] += enc
+                compressed[term]['posting'][0].extend(enc)
                 prev_doc = doc_id
                 prev_pos = -1
                 for pos in self.index[term]['posting'][doc_id]:
@@ -158,6 +183,18 @@ class GammaCode:
                     prev_pos = pos
         self.compressed = compressed
         return compressed
+
+    def decompress(self):
+        index = {}
+        for term in self.compressed:
+            index[term] = {'df': self.compressed[term]['df'], 'posting': {}}
+            doc_ids = self.gamma_decode(self.compressed[term]['posting'][0])
+            positions = []
+            for pos in self.compressed[term]['posting'][1]:
+                positions.append(self.gamma_decode(pos))
+            for i in range(len(doc_ids)):
+                index[term]['posting'][doc_ids[i] + 1] = positions[i]
+        return index
 
     def save_to_file(self, name):
         with open(name, 'wb') as f:
