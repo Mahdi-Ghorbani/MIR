@@ -50,7 +50,7 @@ class NaiveBayesClassifier:
 
     def train(self, X_train: List[List[str]], y_train: List[int]):
         self.counts = Counter(y_train)  # counting number of occurrences of each class (1 to 4)
-        self.p_y = [self.counts[cls] for cls in range(self.n_classes)]
+        self.p_y = [self.counts[cls] for cls in range(1, self.n_classes + 1)]
 
         self.vocab = {}
         for doc_id, doc in enumerate(X_train):
@@ -66,7 +66,7 @@ class NaiveBayesClassifier:
         for word, doc_ids in self.vocab.items():
             for cls_id in range(self.n_classes):
                 self.p_matrix[self.word2id[word], cls_id] = \
-                    (len([id for id in doc_ids if y_train[id] == cls_id]) + 1) / (self.counts[cls_id] + 4)
+                    (len([id for id in doc_ids if y_train[id] == cls_id + 1]) + 1) / (self.counts[cls_id + 1] + 4)
 
     def infer(self, doc: List[str]):
         """
@@ -83,7 +83,8 @@ class NaiveBayesClassifier:
                     probs[cls] *= 1.0 / 4.0
 
         probs /= np.sum(probs, keepdims=True)
-        return probs
+        pred = np.argmax(probs) + 1
+        return probs, pred
 
 
 def svm_clf(X_train: np.ndarray, y_train: np.ndarray, C: float):
@@ -179,10 +180,26 @@ if __name__ == '__main__':
 
     nb_clf = NaiveBayesClassifier(4)
     nb_clf.train(X_train, y_train)
-    nb_inferred_probs = []
-    for x_test in inferred_X_test:
-        nb_inferred_probs.append(nb_clf.infer(x_test))
-    print('nb_result: ', nb_inferred_probs)
+    nb_predict = []
+    for x_test in X_test:
+        porb, pred = nb_clf.infer(x_test)
+        nb_predict.append(pred)
+
+    nb_precision = precision_score(y_test, nb_predict, average='micro')
+    nb_recall = recall_score(y_test, nb_predict, average='micro')
+    nb_f1 = f1_score(y_test, nb_predict, average='micro')
+    nb_f1_manually = (2 * nb_precision * nb_recall) / (nb_precision + nb_recall)
+    nb_accuracy = accuracy_score(y_test, nb_predict)
+    print('nb_result: ', nb_predict)
+    print('precision nb: ', nb_precision)
+    print('recall nb: ', nb_recall)
+    print('F1 score nb: ', nb_f1)
+    print('F1 manually nb: ', nb_f1_manually)
+    print('accuracy nb: ', nb_accuracy)
+    print('metrics:')
+    print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
+    print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
+    print('knn metrics: ', find_metrics(y_test, nb_predict))
 
     knn_predict = knn(docvecs, inferred_X_test, y_train, 5)
     knn_precision = precision_score(y_test, knn_predict, average='micro')
