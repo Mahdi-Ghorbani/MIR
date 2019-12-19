@@ -3,6 +3,8 @@ from utils import read_corpus
 import numpy as np
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import pairwise_distances
+from typing import List
 
 
 class Doc2VecModel:
@@ -13,22 +15,40 @@ class Doc2VecModel:
         print('saving the model to %s...' % path)
         self.model.save(path)
 
-    def load(self, fname):
-        self.model = Doc2Vec.load(fname)
+    def load(self, path: str):
+        self.model = Doc2Vec.load(path)
 
     def train(self, train_corpus):
         self.model.build_vocab(train_corpus)
         self.model.train(train_corpus, total_examples=self.model.corpus_count, epochs=self.model.epochs)
 
+    def infer(self, doc_words: List[str]):
+        """
+        :param doc_words: list of the words in the document to be vectorized
+        :return: a vector with shape (vector_size, ) as the representation of the document
+        """
+        return self.model.infer_vector(doc_words=doc_words)
 
-def svm_clf(X_train: np.ndarray, y_train: np.ndarray):
-    clf = svm.SVC()
+
+def svm_clf(X_train: np.ndarray, y_train: np.ndarray, C: float):
+    """
+    trains an SVM classifier on the documents
+    :param X_train: documents as a numpy array with shape (n_samples_a, n_samples)
+    :param y_train: labels as a numpy array with shape (n_samples,)
+    :return: SVM classifier fitted on the X_train and y_train
+    """
+    clf = svm.SVC(C=C)
     clf.fit(X_train, y_train)
 
     return clf
 
 
 def naive_bayes_clf(X_train: np.ndarray, y_train: np.ndarray):
+    """
+    :param X_train: documents as a numpy array with shape (n_samples_a, n_samples)
+    :param y_train: labels as a numpy array with shape (n_samples,)
+    :return:
+    """
     pass
 
 
@@ -39,9 +59,20 @@ def random_forest_clf(X_train: np.ndarray, y_train: np.ndarray):
     return clf
 
 
-def knn(X_train, y_train, n_iter: int):
-    for i in range(n_iter):
+def knn(X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, k: int):
+    """
+    :param X_train: Design matrix as a numpy array with shape (n_samples_a, n_dim)
+    :param y_train: labels matrix as a numpy array with shape (n_samples_a,)
+    :param k: k in KNN
+    :param X_test: test samples to be classified as a numpy array with shape (n_samples_b, n_dim)
+    :return: y_pred as a numpy array with shape (n_samples_b,)
+    """
+    dists = pairwise_distances(X_test, X_train)  # shape: (n_samples_a, n_samples_b)
+    k_nearest = dists.argsort(axis=1)[:, :k]
+    closest_y = y_train[k_nearest]
+    y_pred = np.array(list(map(lambda x: np.argmax(np.bincount(x)), closest_y)))
 
+    return y_pred
 
 
 if __name__ == '__main__':
