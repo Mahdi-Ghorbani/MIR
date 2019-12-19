@@ -1,7 +1,9 @@
 import xml.etree.ElementTree as ET
 from typing import Set
 from editdistance import distance
-
+import pandas as pd
+from gensim.utils import simple_preprocess
+from gensim.models.doc2vec import TaggedDocument
 
 def from_xml(xml_file):
     """
@@ -37,5 +39,26 @@ def get_bigrams(token: str):
     token = "$" + token + "$"
     return [token[i:i+2] for i in range(len(token) - 1)]
 
+
+def read_corpus(file_path: str):
+    """
+    Function used for reading the documents of phase 2
+    :param file: path to the documents
+    :return: return documents and their tags
+    """
+    with open(file_path) as f:
+        df = pd.read_csv(file_path)
+
+    texts = df['Text'].values.tolist()
+    tokens = [simple_preprocess(text) for text in texts]  # List[List[str]]
+    labels = df['Tag'].values.tolist()
+
+    return tokens, labels
+
+
 def tf_idf():
     pass
+
+
+if __name__ == '__main__':
+    read_corpus('data/phase2_test.csv')
