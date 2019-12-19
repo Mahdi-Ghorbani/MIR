@@ -48,13 +48,13 @@ class NaiveBayesClassifier:
                 else:
                     self.vocab[word] = [doc_id]
 
-        self.word2id = {word:i for i, word in enumerate(self.vocab)}
+        self.word2id = {word: i for i, word in enumerate(self.vocab)}
         self.p_matrix = np.zeros(len(self.vocab), self.n_classes)  # parameters matrix for naive bayes classifier
 
         for word, doc_ids in self.vocab.items():
             for cls_id in range(self.n_classes):
                 self.p_matrix[self.word2id[word], cls_id] = \
-                    len([id for id in doc_ids if y_train[id] == cls_id]) / self.counts[cls_id]
+                    (len([id for id in doc_ids if y_train[id] == cls_id]) + 1) / (self.counts[cls_id] + 4)
 
     def infer(self, doc: List[str]):
         """
@@ -63,9 +63,12 @@ class NaiveBayesClassifier:
         """
         probs = self.p_y.copy()
         for word in doc:
-            if word in self.vocab:  # TODO: change the implementation so that it works for out of vocabulary words too
+            if word in self.vocab:
                 for cls in range(self.n_classes):
                     probs[cls] *= self.p_matrix[self.word2id[word], cls]
+            else:
+                for cls in range(self.n_classes):
+                    probs[cls] *= 1.0 / 4.0
 
         probs /= np.sum(probs, keepdims=True)
         return probs
