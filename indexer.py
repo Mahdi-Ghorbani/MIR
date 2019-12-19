@@ -12,6 +12,7 @@ class Positional:
     def __init__(self, preprocessor):
         self.preprocessor = preprocessor
         self.index = {}
+        self.last_doc_id = 1
 
     def add_term(self, term, doc_id, position):
         normalized = self.preprocessor.normalize(term)
@@ -39,8 +40,9 @@ class Positional:
 
     def add_docs(self, docs):
         with tqdm(total=len(docs)) as pbar:
-            for doc_id, doc in enumerate(docs):
-                self.add_doc(doc=doc, doc_id=doc_id+1)
+            for doc in docs:
+                self.add_doc(doc=doc, doc_id=self.last_doc_id)
+                self.last_doc_id += 1
                 pbar.update(n=1)
         pbar.close()
 
@@ -133,7 +135,6 @@ class Bigram:
     def add_docs(self, docs: List[str]):
         for doc in docs:
             self.add_doc(doc)
-
 
     def add_doc(self, doc: str):
         """

@@ -2,6 +2,8 @@ import numpy as np
 from typing import Dict
 from collections import Counter
 
+from indexer import Positional
+
 
 class TF_IDF:
     def __init__(self, positional_index, preprocessor):
@@ -28,7 +30,7 @@ class TF_IDF:
         max_similarity, best_doc = -10, None
 
         for doc_id in self.doc_ids:
-            doc_vector = self.tf_idf_matrix[:, doc_id-1]
+            doc_vector = self.tf_idf_matrix[:, doc_id - 1]
             similarity = np.dot(query_vector, doc_vector)
 
             if max_similarity < similarity:
@@ -38,21 +40,53 @@ class TF_IDF:
         return best_doc
 
     def _create_tfidf_matrix(self):
+
         self.doc_ids = set()
         for value in self.positional_index.index.values():
             self.doc_ids = self.doc_ids.union(set(value['posting'].keys()))
 
         num_docs = len(self.doc_ids)
 
-        self.tf_idf_matrix = np.zeros([len(self.positional_index.index), num_docs])
-
+        delete_list = []
+        tfc_idf_list = []
         for token, value in self.positional_index.index.items():
+            tfc = 0
+            idf = np.log10(num_docs / value['df'])
+            for occurs in value['posting'].values():
+                tfc += len(occurs)
+            tfc = 1 + np.log10(tfc)
+            delete_list.append(token)
+            tfc_idf_list.append(tfc * idf)
+
+        avg = np.average(tfc_idf_list)
+        remove_list = []
+        for i in range(len(tfc_idf_list)):
+            if tfc_idf_list[i] > avg:
+                remove_list.append(delete_list[i])
+        for token in remove_list:
+            delete_list.remove(token)
+
+        pos_index = Positional(preprocessor=self.preprocessor)
+        pos_index.index = self.positional_index.index.copy()
+
+        for token in delete_list:
+            pos_index.delete_term(token)
+
+        self.doc_ids = set()
+        for value in pos_index.index.values():
+            self.doc_ids = self.doc_ids.union(set(value['posting'].keys()))
+
+        self.token2id = {token: i for i, token in enumerate(pos_index.index.keys())}
+
+        self.tf_idf_matrix = np.zeros([len(pos_index.index), num_docs])
+
+        for token, value in pos_index.index.items():
             num_occur = value['df']
             idf = np.log10(num_docs / num_occur)
             self.idf[token] = idf
 
             for doc_id, occurs in value['posting'].items():
-                self.tf_idf_matrix[self.token2id[token], doc_id - 1] = (1 + np.log(len(occurs))) / idf
+                self.tf_idf_matrix[self.token2id[token], doc_id - 1] = (1 + np.log10(len(occurs))) * idf
 
         self.tf_idf_matrix /= np.sqrt(np.sum(self.tf_idf_matrix.sum() ** 2, axis=0, keepdims=True))
 
