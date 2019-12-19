@@ -5,6 +5,8 @@ from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import pairwise_distances
 from typing import List
+from collections import Counter
+from itertools import chain
 
 
 class Doc2VecModel:
@@ -30,6 +32,45 @@ class Doc2VecModel:
         return self.model.infer_vector(doc_words=doc_words)
 
 
+class NaiveBayesClassifier:
+    def __init__(self, n_classes: int):
+        self.n_classes = n_classes
+
+    def train(self, X_train: List[List[str]], y_train: List[int]):
+        self.counts = Counter(y_train)  # counting number of occurrences of each class (1 to 4)
+        self.p_y = [self.counts[cls] for cls in range(self.n_classes)]
+
+        self.vocab = {}
+        for doc_id, doc in enumerate(X_train):
+            for word in doc:
+                if word in self.vocab:
+                    self.vocab[word].append(doc_id)
+                else:
+                    self.vocab[word] = [doc_id]
+
+        self.word2id = {word:i for i, word in enumerate(self.vocab)}
+        self.p_matrix = np.zeros(len(self.vocab), self.n_classes)  # parameters matrix for naive bayes classifier
+
+        for word, doc_ids in self.vocab.items():
+            for cls_id in range(self.n_classes):
+                self.p_matrix[self.word2id[word], cls_id] = \
+                    len([id for id in doc_ids if y_train[id] == cls_id]) / self.counts[cls_id]
+
+    def infer(self, doc: List[str]):
+        """
+        :param doc: a new document to be classified as a list of words
+        :return: P(y_i=1|doc) as a numpy array with shape (n_classes,)
+        """
+        probs = self.p_y.copy()
+        for word in doc:
+            if word in self.vocab:  # TODO: change the implementation so that it works for out of vocabulary words too
+                for cls in range(self.n_classes):
+                    probs[cls] *= self.p_matrix[self.word2id[word], cls]
+
+        probs /= np.sum(probs, keepdims=True)
+        return probs
+
+
 def svm_clf(X_train: np.ndarray, y_train: np.ndarray, C: float):
     """
     trains an SVM classifier on the documents
@@ -41,15 +82,6 @@ def svm_clf(X_train: np.ndarray, y_train: np.ndarray, C: float):
     clf.fit(X_train, y_train)
 
     return clf
-
-
-def naive_bayes_clf(X_train: np.ndarray, y_train: np.ndarray):
-    """
-    :param X_train: documents as a numpy array with shape (n_samples_a, n_samples)
-    :param y_train: labels as a numpy array with shape (n_samples,)
-    :return:
-    """
-    pass
 
 
 def random_forest_clf(X_train: np.ndarray, y_train: np.ndarray):
