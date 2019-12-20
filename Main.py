@@ -1,11 +1,14 @@
+import numpy as np
 import pandas as pd
-
+from gensim.models.doc2vec import TaggedDocument
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from classify import Doc2VecModel, NaiveBayesClassifier, find_metrics, knn, svm_clf, random_forest_clf
 from preprocessor import EnglishProcessor, PersianProcessor
 from indexer import Positional, Bigram
 from compressor import GammaCode, VariableByte
 from spell_check import SpellChecker
 from searcher import TF_IDF
-from utils import from_xml
+from utils import from_xml, read_corpus, search_by_subject
 from pprint import pprint
 
 DEBUG = True
@@ -21,6 +24,16 @@ if __name__ == '__main__':
 
     #gm_compressor = GammaCode(positional_index=positional_index.index)
     #gm_compressor.compress()
+
+    train_path = 'data/phase2_train.csv'
+    test_path = 'data/phase2_test.csv'
+    phase1_path = 'data/English.csv'
+
+    X_train, y_train = read_corpus(train_path)
+    X_test, y_test = read_corpus(test_path)
+    X_phase1, _ = read_corpus(phase1_path, False)
+    train = pd.read_csv(train_path)
+    test = pd.read_csv(test_path)
 
     while True:
         print("Please enter the command number:")
@@ -50,6 +63,11 @@ if __name__ == '__main__':
         print("23. Print the Persian bigram index")
         print("24. English spellchecker")
         print("25. Search in the vector space")
+        print("26. Get naive-bayes metrics")
+        print("27. Get k-NN metrics")
+        print("28. Get SVM metrics")
+        print("29. Get random forest metrics")
+        print("30. Search by subject number")
 
         cmd = int(input())
         if cmd == 0:
@@ -276,3 +294,246 @@ if __name__ == '__main__':
             positional_index.add_docs(english_df['Text'])
             searcher = TF_IDF(positional_index, english_preprocessor)
             print(searcher.search(query))
+        elif cmd == 26:
+            print("Choose the vector model:")
+            print("1. normal")
+            print("2. tf-idf")
+            cmd = int(input())
+            nb_clf = NaiveBayesClassifier(4)
+            if cmd == 1:
+                nb_clf.train(X_train, y_train, use_tf=False)
+            else:
+                nb_clf.train(X_train, y_train, use_tf=True)
+            nb_predict = []
+            for x_test in X_test:
+                porb, pred = nb_clf.infer(x_test)
+                nb_predict.append(pred)
+
+            nb_precision = precision_score(y_test, nb_predict, average='micro')
+            nb_recall = recall_score(y_test, nb_predict, average='micro')
+            nb_f1 = f1_score(y_test, nb_predict, average='micro')
+            nb_f1_manually = (2 * nb_precision * nb_recall) / (nb_precision + nb_recall)
+            nb_accuracy = accuracy_score(y_test, nb_predict)
+            print('nb result: ', nb_predict)
+            print('nb precision: ', nb_precision)
+            print('nb recall: ', nb_recall)
+            print('nb F1 score: ', nb_f1)
+            print('nb F1 manually: ', nb_f1_manually)
+            print('nb accuracy: ', nb_accuracy)
+            print('metrics:')
+            print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
+            print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
+            print('nb metrics: ', find_metrics(y_test, nb_predict))
+
+        elif cmd == 27:
+            print("Choose the vector model:")
+            print("1. doc2vec")
+            print("2. tf-idf")
+            cmd = int(input())
+            if cmd == 1:
+                doc2vec_train_corpus = [TaggedDocument(doc, [i]) for i, doc in enumerate(X_train)]
+                doc2vecmodel = Doc2VecModel(vector_size=50, min_count=2, epochs=40)
+                print('training the model...')
+                doc2vecmodel.train(doc2vec_train_corpus)
+                doc2vecmodel.save('model.bin')
+                docvecs = doc2vecmodel.get_docvecs()
+
+                inferred_X_test = []
+                for doc in X_test:
+                    inferred_X_test.append(doc2vecmodel.infer(doc))
+
+            else:
+                english_preprocessor = EnglishProcessor()
+                positional_index = Positional(preprocessor=english_preprocessor)
+                positional_index.add_docs(train['Text'])
+                tf_idf = TF_IDF(positional_index, english_preprocessor)
+                docvecs = np.transpose(tf_idf.tf_idf_matrix)
+
+                inferred_X_test = []
+                for doc in test['Text']:
+                    _, vec = tf_idf.search(doc, True)
+                    inferred_X_test.append(vec.T)
+
+            k = int(input("Enter the k value"))
+            knn_predict = knn(docvecs, inferred_X_test, y_train, k)
+            knn_precision = precision_score(y_test, knn_predict, average='micro')
+            knn_recall = recall_score(y_test, knn_predict, average='micro')
+            knn_f1 = f1_score(y_test, knn_predict, average='micro')
+            knn_f1_manually = (2 * knn_precision * knn_recall) / (knn_precision + knn_recall)
+            knn_accuracy = accuracy_score(y_test, knn_predict)
+            print('knn result: ', knn_predict)
+            print('knn precision: ', knn_precision)
+            print('knn recall: ', knn_recall)
+            print('knn F1 score: ', knn_f1)
+            print('knn F1 manually: ', knn_f1_manually)
+            print('knn accuracy: ', knn_accuracy)
+            print('metrics:')
+            print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
+            print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
+            print('knn metrics: ', find_metrics(y_test, knn_predict))
+
+        elif cmd == 28:
+            print("Choose the vector model:")
+            print("1. doc2vec")
+            print("2. tf-idf")
+            cmd = int(input())
+            if cmd == 1:
+                doc2vec_train_corpus = [TaggedDocument(doc, [i]) for i, doc in enumerate(X_train)]
+                doc2vecmodel = Doc2VecModel(vector_size=50, min_count=2, epochs=40)
+                print('training the model...')
+                doc2vecmodel.train(doc2vec_train_corpus)
+                doc2vecmodel.save('model.bin')
+                docvecs = doc2vecmodel.get_docvecs()
+
+                inferred_X_test = []
+                for doc in X_test:
+                    inferred_X_test.append(doc2vecmodel.infer(doc))
+
+            else:
+                english_preprocessor = EnglishProcessor()
+                positional_index = Positional(preprocessor=english_preprocessor)
+                positional_index.add_docs(train['Text'])
+                tf_idf = TF_IDF(positional_index, english_preprocessor)
+                docvecs = np.transpose(tf_idf.tf_idf_matrix)
+
+                inferred_X_test = []
+                for doc in test['Text']:
+                    _, vec = tf_idf.search(doc, True)
+                    inferred_X_test.append(vec.T)
+
+            C = float(input("Enter the C value"))
+            svmClf = svm_clf(docvecs, y_train, C)
+            svm_predict = svmClf.predict(inferred_X_test)
+            svm_precision = precision_score(y_test, svm_predict, average='micro')
+            svm_recall = recall_score(y_test, svm_predict, average='micro')
+            svm_f1 = f1_score(y_test, svm_predict, average='micro')
+            svm_f1_manually = (2 * svm_precision * svm_recall) / (svm_precision + svm_recall)
+            svm_accuracy = accuracy_score(y_test, svm_predict)
+            print('svm result: ', svm_predict)
+            print('svm precision: ', svm_precision)
+            print('svm recall: ', svm_recall)
+            print('svm F1 score: ', svm_f1)
+            print('svm F1 manually: ', svm_f1_manually)
+            print('svm accuracy: ', svm_accuracy)
+            print('metrics:')
+            print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
+            print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
+            print('svm metrics: ', find_metrics(y_test, svm_predict))
+
+        elif cmd == 29:
+            print("Choose the vector model:")
+            print("1. doc2vec")
+            print("2. tf-idf")
+            cmd = int(input())
+            if cmd == 1:
+                doc2vec_train_corpus = [TaggedDocument(doc, [i]) for i, doc in enumerate(X_train)]
+                doc2vecmodel = Doc2VecModel(vector_size=50, min_count=2, epochs=40)
+                print('training the model...')
+                doc2vecmodel.train(doc2vec_train_corpus)
+                doc2vecmodel.save('model.bin')
+                docvecs = doc2vecmodel.get_docvecs()
+
+                inferred_X_test = []
+                for doc in X_test:
+                    inferred_X_test.append(doc2vecmodel.infer(doc))
+
+            else:
+                english_preprocessor = EnglishProcessor()
+                positional_index = Positional(preprocessor=english_preprocessor)
+                positional_index.add_docs(train['Text'])
+                tf_idf = TF_IDF(positional_index, english_preprocessor)
+                docvecs = np.transpose(tf_idf.tf_idf_matrix)
+
+                inferred_X_test = []
+                for doc in test['Text']:
+                    _, vec = tf_idf.search(doc, True)
+                    inferred_X_test.append(vec.T)
+
+            rfClf = random_forest_clf(docvecs, y_train)
+            rf_predict = rfClf.predict(inferred_X_test)
+            rf_precision = precision_score(y_test, rf_predict, average='micro')
+            rf_recall = recall_score(y_test, rf_predict, average='micro')
+            rf_f1 = f1_score(y_test, rf_predict, average='micro')
+            rf_f1_manually = (2 * rf_precision * rf_recall) / (rf_precision + rf_recall)
+            rf_accuracy = accuracy_score(y_test, rf_predict)
+            print('rf result: ', rf_predict)
+            print('rf precision: ', rf_precision)
+            print('rf recall: ', rf_recall)
+            print('rf F1 score: ', rf_f1)
+            print('rf F1 manually: ', rf_f1_manually)
+            print('rf accuracy: ', rf_accuracy)
+            print('metrics:')
+            print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
+            print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
+            print('rf metrics: ', find_metrics(y_test, rf_predict))
+
+        elif cmd == 30:
+            print("Choose the vector model:")
+            print("1. doc2vec")
+            print("2. tf-idf")
+            cmd = int(input())
+            if cmd == 1:
+                doc2vec_train_corpus = [TaggedDocument(doc, [i]) for i, doc in enumerate(X_train)]
+                doc2vecmodel = Doc2VecModel(vector_size=50, min_count=2, epochs=40)
+                print('training the model...')
+                doc2vecmodel.train(doc2vec_train_corpus)
+                doc2vecmodel.save('model.bin')
+                docvecs = doc2vecmodel.get_docvecs()
+
+                inferred_X_test = []
+                for doc in X_phase1:
+                    inferred_X_test.append(doc2vecmodel.infer(doc))
+
+            else:
+                english_preprocessor = EnglishProcessor()
+                positional_index = Positional(preprocessor=english_preprocessor)
+                positional_index.add_docs(train['Text'])
+                tf_idf = TF_IDF(positional_index, english_preprocessor)
+                docvecs = np.transpose(tf_idf.tf_idf_matrix)
+
+                inferred_X_test = []
+                for doc in X_phase1:
+                    _, vec = tf_idf.search(doc, True)
+                    inferred_X_test.append(vec.T)
+
+            print("Enter the classifier:")
+            print("1. Naive Bayes")
+            print("2. k-NN")
+            print("3. SVM")
+            print("4. RF")
+            cmd = int(input())
+
+            if cmd == 1:
+                nb_clf = NaiveBayesClassifier(4)
+                print("Choose the vector model:")
+                print("1. normal")
+                print("2. tf-idf")
+                cmd = int(input())
+                if cmd == 1:
+                    nb_clf.train(X_train, y_train, use_tf=False)
+                else:
+                    nb_clf.train(X_train, y_train, use_tf=True)
+                predict = []
+                for x_test in X_phase1:
+                    porb, pred = nb_clf.infer(x_test)
+                    predict.append(pred)
+                print(predict)
+
+            elif cmd == 2:
+                k = int(input("Enter the k value"))
+                predict = knn(docvecs, inferred_X_test, y_train, k)
+                print(predict)
+
+            elif cmd == 3:
+                C = float(input("Enter the C value"))
+                svmClf = svm_clf(docvecs, y_train, C)
+                predict = svmClf.predict(inferred_X_test)
+                print(predict)
+
+            else:
+                rfClf = random_forest_clf(docvecs, y_train)
+                predict = rfClf.predict(inferred_X_test)
+                print(predict)
+
+            tag = int(input("Enter the tag"))
+            print(search_by_subject(predict, tag))

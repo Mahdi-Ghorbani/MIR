@@ -63,7 +63,7 @@ class TF_IDF:
         avg = np.average(tfc_idf_list)
         remove_list = []
         for i in range(len(tfc_idf_list)):
-            if tfc_idf_list[i] > 1.2 * avg:
+            if tfc_idf_list[i] > 1.25 * avg:
                 remove_list.append(delete_list[i])
         for token in remove_list:
             delete_list.remove(token)

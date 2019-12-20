@@ -1,21 +1,10 @@
-import pandas as pd
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from indexer import Positional
-from preprocessor import EnglishProcessor
-from searcher import TF_IDF
-from utils import read_corpus
 import numpy as np
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import pairwise_distances
 from typing import List
 from collections import Counter
-from searcher import TF_IDF
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import f1_score
-from utils import search_by_subject
 
 
 class Doc2VecModel:
@@ -72,7 +61,8 @@ class NaiveBayesClassifier:
             for word, doc_ids in self.vocab.items():
                 for cls_id in range(self.n_classes):
                     self.p_matrix[self.word2id[word], cls_id] = \
-                        (len([id for id in doc_ids if y_train[id] == cls_id + 1]) + 1) / (self.counts[cls_id + 1] + self.n_classes)
+                        (len([id for id in doc_ids if y_train[id] == cls_id + 1]) + 1) / (
+                                    self.counts[cls_id + 1] + self.n_classes)
         else:
             self.vocab = {}
             num_words_doc = []  # this list will contain the number of words in the docs
@@ -93,17 +83,14 @@ class NaiveBayesClassifier:
 
             # counting the number of words in the documents of the i-th category
             for cls_id in range(self.n_classes):
-                num_words_class[cls_id] = np.sum([num for doc_id, num in enumerate(num_words_doc) if y_train[doc_id] == cls_id + 1])
-
-            print(num_words_doc)
-            print(num_words_class)
+                num_words_class[cls_id] = np.sum(
+                    [num for doc_id, num in enumerate(num_words_doc) if y_train[doc_id] == cls_id + 1])
 
             for word, value in self.vocab.items():
                 for cls_id in range(self.n_classes):
                     self.p_matrix[self.word2id[word], cls_id] = \
-                        (np.sum([term[1] for term in value if y_train[term[0]] == cls_id + 1]) + 1) / (num_words_class[cls_id] + self.n_classes)
-
-
+                        (np.sum([term[1] for term in value if y_train[term[0]] == cls_id + 1]) + 1) / (num_words_class[
+                            cls_id] + self.n_classes)
 
     def infer(self, doc: List[str]):
         """
@@ -117,7 +104,7 @@ class NaiveBayesClassifier:
             else:
                 log_probs += np.log(1.0 / self.n_classes)
 
-        #probs /= np.sum(probs, keepdims=True)
+        # probs /= np.sum(probs, keepdims=True)
         pred = np.argmax(log_probs) + 1
         return log_probs, pred
 
@@ -189,142 +176,3 @@ def find_metrics(y_test, y_predict):
     accuracy = np.divide(np.add(tp, tn), np.add(tp, np.add(fp, np.add(tn, fn))))
 
     return precision, recall, f1, accuracy
-
-
-if __name__ == '__main__':
-    train_path = 'data/phase2_train.csv'
-    test_path = 'data/phase2_test.csv'
-    phase1_path = 'data/English.csv'
-
-    X_train, y_train = read_corpus(train_path)
-    X_test, y_test = read_corpus(test_path)
-    X_phase1, _ = read_corpus(phase1_path, False)
-    train = pd.read_csv(train_path)
-    test = pd.read_csv(test_path)
-
-    # using train and test text both to train the dec2vec model
-    # doc2vec_train_corpus = [TaggedDocument(doc, [i]) for i, doc in enumerate(X_train)]
-    # doc2vecmodel = Doc2VecModel(vector_size=50, min_count=2, epochs=40)
-    # print('training the model...')
-    # doc2vecmodel.train(doc2vec_train_corpus)
-    # doc2vecmodel.save('model.bin')
-    # doc2vecmodel = Doc2VecModel(None, None, None)
-    # doc2vecmodel.load('model.bin')
-    # docvecs = doc2vecmodel.get_docvecs()
-
-    # This part is for modeling the train data in tf-idf format
-    english_preprocessor = EnglishProcessor()
-    positional_index = Positional(preprocessor=english_preprocessor)
-    positional_index.add_docs(train['Text'])
-    tf_idf = TF_IDF(positional_index, english_preprocessor)
-    docvecs = np.transpose(tf_idf.tf_idf_matrix)
-
-    # Model the test data to doc2vec
-    # inferred_X_test = []
-    # for doc in X_test:
-    #     inferred_X_test.append(doc2vecmodel.infer(doc))
-
-    # Model the test data to tf-idf
-    inferred_X_test = []
-    for doc in test['Text']:
-        _, vec = tf_idf.search(doc, True)
-        inferred_X_test.append(vec.T)
-
-    # nb_clf = NaiveBayesClassifier(4)
-    # nb_clf.train(X_train, y_train, use_tf=True)
-    # nb_predict = []
-    # for x_test in X_test:
-    #     porb, pred = nb_clf.infer(x_test)
-    #     nb_predict.append(pred)
-    #
-    # nb_precision = precision_score(y_test, nb_predict, average='micro')
-    # nb_recall = recall_score(y_test, nb_predict, average='micro')
-    # nb_f1 = f1_score(y_test, nb_predict, average='micro')
-    # nb_f1_manually = (2 * nb_precision * nb_recall) / (nb_precision + nb_recall)
-    # nb_accuracy = accuracy_score(y_test, nb_predict)
-    # print('nb_result: ', nb_predict)
-    # print('precision nb: ', nb_precision)
-    # print('recall nb: ', nb_recall)
-    # print('F1 score nb: ', nb_f1)
-    # print('F1 manually nb: ', nb_f1_manually)
-    # print('accuracy nb: ', nb_accuracy)
-    # print('metrics:')
-    # print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
-    # print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
-    # print('nb metrics: ', find_metrics(y_test, nb_predict))
-
-    knn_predict = knn(docvecs, inferred_X_test, y_train, 5)
-    # knn_precision = precision_score(y_test, knn_predict, average='micro')
-    # knn_recall = recall_score(y_test, knn_predict, average='micro')
-    # knn_f1 = f1_score(y_test, knn_predict, average='micro')
-    # knn_f1_manually = (2 * knn_precision * knn_recall) / (knn_precision + knn_recall)
-    # knn_accuracy = accuracy_score(y_test, knn_predict)
-    # print('knn_result: ', knn_predict)
-    # print('precision knn: ', knn_precision)
-    # print('recall knn: ', knn_recall)
-    # print('F1 score knn: ', knn_f1)
-    # print('F1 manually knn: ', knn_f1_manually)
-    # print('accuracy knn: ', knn_accuracy)
-    # print('metrics:')
-    # print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
-    # print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
-    print('knn metrics: ', find_metrics(y_test, knn_predict))
-
-    svmClf = svm_clf(docvecs, y_train, 1.)
-    svm_predict = svmClf.predict(inferred_X_test)
-    # svm_precision = precision_score(y_test, svm_predict, average='micro')
-    # svm_recall = recall_score(y_test, svm_predict, average='micro')
-    # svm_f1 = f1_score(y_test, svm_predict, average='micro')
-    # svm_f1_manually = (2 * svm_precision * svm_recall) / (svm_precision + svm_recall)
-    # svm_accuracy = accuracy_score(y_test, svm_predict)
-    # print('svm_result: ', svm_predict)
-    # print('precision svm: ', svm_precision)
-    # print('recall svm: ', svm_recall)
-    # print('F1 score svm: ', svm_f1)
-    # print('F1 manually svm: ', svm_f1_manually)
-    # print('accuracy svm: ', svm_accuracy)
-    # print('metrics:')
-    # print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
-    # print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
-    print('svm metrics: ', find_metrics(y_test, svm_predict))
-
-    rfClf = random_forest_clf(docvecs, y_train)
-    rf_predict = rfClf.predict(inferred_X_test)
-    # rf_precision = precision_score(y_test, rf_predict, average='micro')
-    # rf_recall = recall_score(y_test, rf_predict, average='micro')
-    # rf_f1 = f1_score(y_test, rf_predict, average='micro')
-    # rf_f1_manually = (2 * rf_precision * rf_recall) / (rf_precision + rf_recall)
-    # rf_accuracy = accuracy_score(y_test, rf_predict)
-    # print('rf_result: ', rf_predict)
-    # print('precision rf: ', rf_precision)
-    # print('recall rf: ', rf_recall)
-    # print('F1 score rf: ', rf_f1)
-    # print('F1 manually rf: ', rf_f1_manually)
-    # print('accuracy rf: ', rf_accuracy)
-    # print('metrics:')
-    # print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
-    # print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
-    print('rf metrics: ', find_metrics(y_test, rf_predict))
-
-    # Predict phase1 tags and search by tag number
-    # inferred_X_phase1 = []
-    # for doc in X_phase1:
-    #     inferred_X_phase1.append(doc2vecmodel.infer(doc))
-    #
-    # nb_predict_phase1 = []
-    # for x_test in X_phase1:
-    #     porb, pred = nb_clf.infer(x_test)
-    #     nb_predict_phase1.append(pred)
-    #
-    # knn_predict_phase1 = knn(docvecs, inferred_X_phase1, y_train, 5)
-    #
-    # svm_predict_phase1 = svmClf.predict(inferred_X_phase1)
-    #
-    # rf_predict_phase1 = rfClf.predict(inferred_X_phase1)
-    #
-    # print(nb_predict_phase1)
-    # print(knn_predict_phase1)
-    # print(svm_predict_phase1)
-    # print(rf_predict_phase1)
-    #
-    # print(search_by_subject(nb_predict_phase1, 1))
