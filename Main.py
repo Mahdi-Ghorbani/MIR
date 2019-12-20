@@ -29,28 +29,27 @@ if __name__ == '__main__':
         print("2. Input a text and get the tokens after preprocessing")
         print("3. Print the English positional index")
         print("4. Print posting list of a word in positional index")
-        print("5. ")
-        print("6. Remove a document by document ID from positional index")
-        print("7. Save the positional index in a file")
-        print("8. Load a positional index from a file")
-        print("9. Print the variable byte encoded format")
-        print("10. Save the variable byte encoded format in a file")
-        print("11. Load a variable byte encoded format from a file")
-        print("12. Compare between used space before and after variable byte compression")
-        print("13. Print the gamma encoded format")
-        print("14. Save the gamma encoded format in a file")
-        print("15. Load a gamma encoded format from a file")
-        print("16. Compare between used space before and after gamma compression")
-        print("17. Normalize an input Persian text")
-        print("18. print preprocessed persian xml texts")
-        print("19. Find frequent words in persian xml docs")
-        print("20. Find frequent words in an input text")
-        print("21. Print the English frequent words from input text")
-        print("22. Print the English bigram index")
-        print("23. Print the Persian positional index")
-        print("24. Print the Persian bigram index")
-        print("25. English spellchecker")
-        print("26. Search in the vector space")
+        print("5. Remove a document by document ID from positional index")
+        print("6. Save the positional index in a file")
+        print("7. Load a positional index from a file")
+        print("8. Print the variable byte encoded format")
+        print("9. Save the variable byte encoded format in a file")
+        print("10. Load a variable byte encoded format from a file")
+        print("11. Compare between used space before and after variable byte compression")
+        print("12. Print the gamma encoded format")
+        print("13. Save the gamma encoded format in a file")
+        print("14. Load a gamma encoded format from a file")
+        print("15. Compare between used space before and after gamma compression")
+        print("16. Normalize an input Persian text")
+        print("17. print preprocessed persian xml texts")
+        print("18. Find frequent words in persian xml docs")
+        print("19. Find frequent words in an input text")
+        print("20. Print the English frequent words from input text")
+        print("21. Print the English bigram index")
+        print("22. Print the Persian positional index")
+        print("23. Print the Persian bigram index")
+        print("24. English spellchecker")
+        print("25. Search in the vector space")
 
         cmd = int(input())
         if cmd == 0:
@@ -65,13 +64,14 @@ if __name__ == '__main__':
             print("Enter the text")
             cmd = input()
             print(english_preprocessor.handle_query(cmd))
+
         elif cmd == 3:
             if DEBUG:
                 english_df = english_df[:20]
             positional_index = Positional(preprocessor=english_preprocessor)
             positional_index.add_docs(english_df['Text'])
             positional_index.print_result()
-            break
+
         elif cmd == 4:
             print("Enter the word")
             cmd = input()
@@ -84,14 +84,8 @@ if __name__ == '__main__':
             positional_index = Positional(preprocessor=english_preprocessor)
             positional_index.add_docs(english_df['Text'])
             positional_index.find_posting(cmd)
-            break
+
         elif cmd == 5:
-            pass
-            # print("Enter the text")
-            # cmd = input()
-            # positional_index = Positional(preprocessor=english_preprocessor)
-            # positional_index.delete_text(cmd)
-        elif cmd == 6:
             print("Enter the document ID")
             cmd = int(input())
             positional_index = Positional(preprocessor=english_preprocessor)
@@ -101,7 +95,8 @@ if __name__ == '__main__':
 
             positional_index.add_docs(english_df['Text'])
             positional_index.delete_doc(cmd)
-        elif cmd == 7:
+
+        elif cmd == 6:
             print("Enter the name of the file")
             cmd = input()
             positional_index = Positional(preprocessor=english_preprocessor)
@@ -111,12 +106,14 @@ if __name__ == '__main__':
 
             positional_index.add_docs(english_df['Text'])
             positional_index.save_to_file(cmd)
-        elif cmd == 8:
+
+        elif cmd == 7:
             print("Enter the name of the file")
             cmd = input()
             positional_index = Positional(preprocessor=english_preprocessor)
             positional_index.load_from_file(cmd)
-        elif cmd == 9:
+
+        elif cmd == 8:
             positional_index = Positional(preprocessor=english_preprocessor)
 
             if DEBUG:
@@ -126,7 +123,8 @@ if __name__ == '__main__':
             vb_compressor = VariableByte(positional_index=positional_index.index)
             vb_compressor.compress()
             vb_compressor.print_result()
-        elif cmd == 10:
+
+        elif cmd == 9:
             print("Enter the name of the file")
             cmd = input()
             positional_index = Positional(preprocessor=english_preprocessor)
@@ -138,13 +136,15 @@ if __name__ == '__main__':
             vb_compressor = VariableByte(positional_index=positional_index.index)
             vb_compressor.compress()
             vb_compressor.save_to_file(cmd)
-        elif cmd == 11:
+
+        elif cmd == 10:
             print("Enter the name of the file")
             cmd = input()
             positional_index = Positional(preprocessor=english_preprocessor)
             vb_compressor = VariableByte(positional_index=positional_index.index)
             vb_compressor.load_from_file(cmd)
-        elif cmd == 12:
+
+        elif cmd == 11:
             positional_index = Positional(preprocessor=english_preprocessor)
 
             if DEBUG:
@@ -154,7 +154,8 @@ if __name__ == '__main__':
             vb_compressor = VariableByte(positional_index=positional_index.index)
             vb_compressor.compress()
             vb_compressor.print_used_space()
-        elif cmd == 13:
+
+        elif cmd == 12:
             positional_index = Positional(preprocessor=english_preprocessor)
 
             if DEBUG:
@@ -164,64 +165,77 @@ if __name__ == '__main__':
             gm_compressor = GammaCode(positional_index=positional_index.index)
             gm_compressor.compress()
             gm_compressor.print_result()
-        elif cmd == 14:
+
+        elif cmd == 13:
             print("Enter the name of the file")
             cmd = input()
             positional_index = Positional(preprocessor=english_preprocessor)
             gm_compressor = GammaCode(positional_index=positional_index.index)
             gm_compressor.compress()
             gm_compressor.save_to_file(cmd)
-        elif cmd == 15:
+
+        elif cmd == 14:
             print("Enter the name of the file")
             cmd = input()
+            positional_index = Positional(preprocessor=english_preprocessor)
             gm_compressor = GammaCode(positional_index=positional_index.index)
             gm_compressor.compress()
             gm_compressor.load_from_file(cmd)
-        elif cmd == 16:
+
+        elif cmd == 15:
+            positional_index = Positional(preprocessor=english_preprocessor)
             gm_compressor = GammaCode(positional_index=positional_index.index)
             gm_compressor.compress()
             gm_compressor.print_used_space()
-        elif cmd == 17:
+
+        elif cmd == 16:
             text = input()
             print(persian_preprocessor.normalize(text))
-        elif cmd == 18:
+
+        elif cmd == 17:
             preprocessed_docs = persian_preprocessor.preprocess_xml_docs(persian_docs)
             print(preprocessed_docs[0])
-            break
-        elif cmd == 19:
+
+        elif cmd == 18:
             _ = persian_preprocessor.preprocess_xml_docs(persian_docs)
             words = persian_preprocessor.find_stopwords()
             words = [(word, freq) for word, freq in words.items()]
             words = sorted(words, key= lambda x: x[1], reverse=True)
             print(words[:30])
-            break
-        elif cmd == 20:
+
+        elif cmd == 19:
             text = input()
             persian_preprocessor.find_stopwords(text)
-        elif cmd == 21:
+
+        elif cmd == 20:
             print('Input a text:')
             text = input()
+
             words = english_preprocessor.find_stopwords(text)
             words = [(word, freq) for word, freq in words.items()]
             words = sorted(words, key=lambda x: x[1], reverse=True)
             print(words[:20])
-        elif cmd == 22:
+
+        elif cmd == 21:
             positional_index = Positional(preprocessor=english_preprocessor)
+
             if DEBUG:
                 persian_docs = persian_docs[:20]
+
             positional_index.add_docs(persian_docs)
             bigram = Bigram(preprocessor=english_preprocessor, positional_index=positional_index)
             bigram.add_docs(persian_docs)
             bigram.print_result()
-            break
-        elif cmd == 23:
+
+        elif cmd == 22:
             positional_index = Positional(preprocessor=persian_preprocessor)
             if DEBUG:
                 persian_docs = persian_docs[:20]
 
             positional_index.add_docs(persian_docs)
             positional_index.print_result()
-        elif cmd == 24:
+
+        elif cmd == 23:
             positional_index = Positional(preprocessor=persian_preprocessor)
 
             if DEBUG:
@@ -232,7 +246,7 @@ if __name__ == '__main__':
             bigram.add_docs(persian_docs)
             bigram.print_result()
 
-        elif cmd == 25:
+        elif cmd == 24:
             positional_index = Positional(preprocessor=english_preprocessor)
 
             DEBUG = False
@@ -240,14 +254,16 @@ if __name__ == '__main__':
             if DEBUG:
                 english_df = english_df[:20]
 
+            print('Input a query...')
+            query = input()
+
             positional_index.add_docs(english_df['Text'])
             bigram = Bigram(preprocessor=english_preprocessor, positional_index=positional_index)
             bigram.add_docs(english_df['Text'])
             spell_checker = SpellChecker(english_preprocessor, bigram_index=bigram)
-            print(spell_checker.correct_query('Hay Bey!'))
-            break
+            print(spell_checker.correct_query(query))
 
-        elif cmd == 26:
+        elif cmd == 25:
             positional_index = Positional(preprocessor=english_preprocessor)
 
             DEBUG = True
@@ -255,12 +271,8 @@ if __name__ == '__main__':
             if DEBUG:
                 english_df = english_df[:20]
 
+            print('Input a query...')
+            query = input()
             positional_index.add_docs(english_df['Text'])
             searcher = TF_IDF(positional_index, english_preprocessor)
-            query = "PARMALAT, the bankrupt Italian food company, is suing outside auditors Grant Thornton and Deloitte  amp; Touche, seeking 5.5 billion in damages."
             print(searcher.search(query))
-            break
-
-
-
-
