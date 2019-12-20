@@ -563,6 +563,7 @@ if __name__ == '__main__':
 
             else:
                 new_train = train['Text'][0:8100]
+                new_test = train['Text'][8100:]
                 english_preprocessor = EnglishProcessor()
                 positional_index = Positional(preprocessor=english_preprocessor)
                 positional_index.add_docs(new_train)
@@ -570,7 +571,7 @@ if __name__ == '__main__':
                 docvecs = np.transpose(tf_idf.tf_idf_matrix)
 
                 inferred_X_test = []
-                for doc in new_X_test:
+                for doc in new_test:
                     _, vec = tf_idf.search(doc, True)
                     inferred_X_test.append(vec.T)
 
@@ -612,6 +613,7 @@ if __name__ == '__main__':
 
             else:
                 new_train = train['Text'][0:8100]
+                new_test = train['Text'][8100:]
                 english_preprocessor = EnglishProcessor()
                 positional_index = Positional(preprocessor=english_preprocessor)
                 positional_index.add_docs(new_train)
@@ -619,7 +621,7 @@ if __name__ == '__main__':
                 docvecs = np.transpose(tf_idf.tf_idf_matrix)
 
                 inferred_X_test = []
-                for doc in new_X_test:
+                for doc in new_test:
                     _, vec = tf_idf.search(doc, True)
                     inferred_X_test.append(vec.T)
 
@@ -637,6 +639,10 @@ if __name__ == '__main__':
             acc1_5 = accuracy_score(new_y_test, svm1_5)
             acc2 = accuracy_score(new_y_test, svm2)
 
+            print(acc0_5)
+            print(acc1)
+            print(acc1_5)
+            print(acc2)
             if acc0_5 >= acc1 and acc0_5 >= acc1_5 and acc0_5 >= acc2:
                 print('best C is 0.5')
             elif acc1 >= acc0_5 and acc1 >= acc1_5 and acc1 >= acc2:
