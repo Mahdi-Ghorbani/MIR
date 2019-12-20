@@ -101,7 +101,7 @@ class NaiveBayesClassifier:
             for word, value in self.vocab.items():
                 for cls_id in range(self.n_classes):
                     self.p_matrix[self.word2id[word], cls_id] = \
-                        (np.sum([term[1] for term in value if y_train[term[0]] == cls_id + 1]) + 1) / num_words_class[cls_id]
+                        (np.sum([term[1] for term in value if y_train[term[0]] == cls_id + 1]) + 1) / (num_words_class[cls_id] + self.n_classes)
 
 
 
