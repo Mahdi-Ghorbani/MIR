@@ -1,6 +1,5 @@
 import pandas as pd
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-
 from indexer import Positional
 from preprocessor import EnglishProcessor
 from searcher import TF_IDF
@@ -11,7 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import pairwise_distances
 from typing import List
 from collections import Counter
-from itertools import chain
+from searcher import TF_IDF
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
@@ -54,43 +53,73 @@ class NaiveBayesClassifier:
     def __init__(self, n_classes: int):
         self.n_classes = n_classes
 
-    def train(self, X_train: List[List[str]], y_train: List[int]):
+    def train(self, X_train: List[List[str]], y_train: List[int], use_tf: bool = None):
         self.counts = Counter(y_train)  # counting number of occurrences of each class (1 to 4)
         self.p_y = [self.counts[cls] for cls in range(1, self.n_classes + 1)]
 
-        self.vocab = {}
-        for doc_id, doc in enumerate(X_train):
-            for word in doc:
-                if word in self.vocab:
-                    self.vocab[word].append(doc_id)
-                else:
-                    self.vocab[word] = [doc_id]
+        if not use_tf:
+            self.vocab = {}
+            for doc_id, doc in enumerate(X_train):
+                for word in doc:
+                    if word in self.vocab:
+                        self.vocab[word].append(doc_id)
+                    else:
+                        self.vocab[word] = [doc_id]
 
-        self.word2id = {word: i for i, word in enumerate(self.vocab)}
-        self.p_matrix = np.zeros((len(self.vocab), self.n_classes))  # parameters matrix for naive bayes classifier
+            self.word2id = {word: i for i, word in enumerate(self.vocab)}
+            self.p_matrix = np.zeros((len(self.vocab), self.n_classes))  # parameters matrix for naive bayes classifier
 
-        for word, doc_ids in self.vocab.items():
+            for word, doc_ids in self.vocab.items():
+                for cls_id in range(self.n_classes):
+                    self.p_matrix[self.word2id[word], cls_id] = \
+                        (len([id for id in doc_ids if y_train[id] == cls_id + 1]) + 1) / (self.counts[cls_id + 1] + self.n_classes)
+        else:
+            self.vocab = {}
+            num_words_doc = []  # this list will contain the number of words in the docs
+
+            for doc_id, doc in enumerate(X_train):
+                words = Counter(doc)
+                num_words_doc.append(len(doc))
+                for word, n_occur in words.items():
+                    if word in self.vocab:
+                        self.vocab[word].append((doc_id, n_occur))
+                    else:
+                        self.vocab[word] = [(doc_id, n_occur)]
+
+            self.word2id = {word: i for i, word in enumerate(self.vocab)}
+            self.p_matrix = np.zeros((len(self.vocab), self.n_classes))  # parameters matrix for naive bayes classifier
+
+            num_words_class = np.zeros((self.n_classes,), dtype=np.int32)
+
+            # counting the number of words in the documents of the i-th category
             for cls_id in range(self.n_classes):
-                self.p_matrix[self.word2id[word], cls_id] = \
-                    (len([id for id in doc_ids if y_train[id] == cls_id + 1]) + 1) / (self.counts[cls_id + 1] + 4)
+                num_words_class[cls_id] = np.sum([num for doc_id, num in enumerate(num_words_doc) if y_train[doc_id] == cls_id + 1])
+
+            print(num_words_doc)
+            print(num_words_class)
+
+            for word, value in self.vocab.items():
+                for cls_id in range(self.n_classes):
+                    self.p_matrix[self.word2id[word], cls_id] = \
+                        (np.sum([term[1] for term in value if y_train[term[0]] == cls_id + 1]) + 1) / num_words_class[cls_id]
+
+
 
     def infer(self, doc: List[str]):
         """
         :param doc: a new document to be classified as a list of words
         :return: P(y_i=1|doc) as a numpy array with shape (n_classes,)
         """
-        probs = self.p_y.copy()
+        log_probs = np.log(self.p_y.copy())
         for word in doc:
             if word in self.vocab:
-                for cls in range(self.n_classes):
-                    probs[cls] *= self.p_matrix[self.word2id[word], cls]
+                log_probs += np.log(self.p_matrix[self.word2id[word]])
             else:
-                for cls in range(self.n_classes):
-                    probs[cls] *= 1.0 / 4.0
+                log_probs += np.log(1.0 / self.n_classes)
 
-        probs /= np.sum(probs, keepdims=True)
-        pred = np.argmax(probs) + 1
-        return probs, pred
+        #probs /= np.sum(probs, keepdims=True)
+        pred = np.argmax(log_probs) + 1
+        return log_probs, pred
 
 
 def svm_clf(X_train: np.ndarray, y_train: np.ndarray, C: float):
@@ -202,12 +231,12 @@ if __name__ == '__main__':
         inferred_X_test.append(vec.T)
 
     # nb_clf = NaiveBayesClassifier(4)
-    # nb_clf.train(X_train, y_train)
+    # nb_clf.train(X_train, y_train, use_tf=True)
     # nb_predict = []
     # for x_test in X_test:
     #     porb, pred = nb_clf.infer(x_test)
     #     nb_predict.append(pred)
-
+    #
     # nb_precision = precision_score(y_test, nb_predict, average='micro')
     # nb_recall = recall_score(y_test, nb_predict, average='micro')
     # nb_f1 = f1_score(y_test, nb_predict, average='micro')
