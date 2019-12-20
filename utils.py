@@ -1,9 +1,10 @@
 import xml.etree.ElementTree as ET
-from typing import Set
+from typing import Set, List
 from editdistance import distance
 import pandas as pd
 from gensim.utils import simple_preprocess
 from gensim.models.doc2vec import TaggedDocument
+
 
 def from_xml(xml_file):
     """
@@ -37,10 +38,10 @@ def edit_distance(str1: str, str2: str):
 
 def get_bigrams(token: str):
     token = "$" + token + "$"
-    return [token[i:i+2] for i in range(len(token) - 1)]
+    return [token[i:i + 2] for i in range(len(token) - 1)]
 
 
-def read_corpus(file_path: str):
+def read_corpus(file_path: str, has_tag=True):
     """
     Function used for reading the documents of phase 2
     :param file: path to the documents
@@ -51,13 +52,23 @@ def read_corpus(file_path: str):
 
     texts = df['Text'].values.tolist()
     tokens = [simple_preprocess(text) for text in texts]  # List[List[str]]
-    labels = df['Tag'].values.tolist()
+    labels = None
+    if has_tag:
+        labels = df['Tag'].values.tolist()
 
     return tokens, labels
 
 
 def tf_idf():
     pass
+
+
+def search_by_subject(tags: List[int], query_tag: int):
+    result = []
+    for i in range(len(tags)):
+        if tags[i] == query_tag:
+            result.append(i + 1)
+    return result
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+import pandas as pd
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from utils import read_corpus
 import numpy as np
@@ -11,6 +12,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
+from utils import search_by_subject
 
 
 class Doc2VecModel:
@@ -159,97 +161,121 @@ def find_metrics(y_test, y_predict):
 if __name__ == '__main__':
     train_path = 'data/phase2_train.csv'
     test_path = 'data/phase2_test.csv'
+    phase1_path = 'data/English.csv'
 
     X_train, y_train = read_corpus(train_path)
     X_test, y_test = read_corpus(test_path)
+    X_phase1, _ = read_corpus(phase1_path, False)
+
 
     # using train and test text both to train the dec2vec model
-    doc2vec_train_corpus = [TaggedDocument(doc, [i]) for i, doc in enumerate(X_train)]
-    doc2vecmodel = Doc2VecModel(vector_size=50, min_count=2, epochs=40)
-    print('training the model...')
-    doc2vecmodel.train(doc2vec_train_corpus)
-    doc2vecmodel.save('model.bin')
-    # doc2vecmodel = Doc2VecModel(None, None, None)
-    # doc2vecmodel.load('model.bin')
+    # doc2vec_train_corpus = [TaggedDocument(doc, [i]) for i, doc in enumerate(X_train)]
+    # doc2vecmodel = Doc2VecModel(vector_size=50, min_count=2, epochs=40)
+    # print('training the model...')
+    # doc2vecmodel.train(doc2vec_train_corpus)
+    # doc2vecmodel.save('model.bin')
+    doc2vecmodel = Doc2VecModel(None, None, None)
+    doc2vecmodel.load('model.bin')
 
-    test_docs_list = [doc for doc in X_test]
     inferred_X_test = []
-    for doc in test_docs_list:
+    for doc in X_test:
         inferred_X_test.append(doc2vecmodel.infer(doc))
     docvecs = doc2vecmodel.get_docvecs()
 
     nb_clf = NaiveBayesClassifier(4)
     nb_clf.train(X_train, y_train)
-    nb_predict = []
-    for x_test in X_test:
-        porb, pred = nb_clf.infer(x_test)
-        nb_predict.append(pred)
+    # nb_predict = []
+    # for x_test in X_test:
+    #     porb, pred = nb_clf.infer(x_test)
+    #     nb_predict.append(pred)
 
-    nb_precision = precision_score(y_test, nb_predict, average='micro')
-    nb_recall = recall_score(y_test, nb_predict, average='micro')
-    nb_f1 = f1_score(y_test, nb_predict, average='micro')
-    nb_f1_manually = (2 * nb_precision * nb_recall) / (nb_precision + nb_recall)
-    nb_accuracy = accuracy_score(y_test, nb_predict)
-    print('nb_result: ', nb_predict)
-    print('precision nb: ', nb_precision)
-    print('recall nb: ', nb_recall)
-    print('F1 score nb: ', nb_f1)
-    print('F1 manually nb: ', nb_f1_manually)
-    print('accuracy nb: ', nb_accuracy)
-    print('metrics:')
-    print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
-    print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
-    print('knn metrics: ', find_metrics(y_test, nb_predict))
+    # nb_precision = precision_score(y_test, nb_predict, average='micro')
+    # nb_recall = recall_score(y_test, nb_predict, average='micro')
+    # nb_f1 = f1_score(y_test, nb_predict, average='micro')
+    # nb_f1_manually = (2 * nb_precision * nb_recall) / (nb_precision + nb_recall)
+    # nb_accuracy = accuracy_score(y_test, nb_predict)
+    # print('nb_result: ', nb_predict)
+    # print('precision nb: ', nb_precision)
+    # print('recall nb: ', nb_recall)
+    # print('F1 score nb: ', nb_f1)
+    # print('F1 manually nb: ', nb_f1_manually)
+    # print('accuracy nb: ', nb_accuracy)
+    # print('metrics:')
+    # print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
+    # print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
+    # print('knn metrics: ', find_metrics(y_test, nb_predict))
 
-    knn_predict = knn(docvecs, inferred_X_test, y_train, 5)
-    knn_precision = precision_score(y_test, knn_predict, average='micro')
-    knn_recall = recall_score(y_test, knn_predict, average='micro')
-    knn_f1 = f1_score(y_test, knn_predict, average='micro')
-    knn_f1_manually = (2 * knn_precision * knn_recall) / (knn_precision + knn_recall)
-    knn_accuracy = accuracy_score(y_test, knn_predict)
-    print('knn_result: ', knn_predict)
-    print('precision knn: ', knn_precision)
-    print('recall knn: ', knn_recall)
-    print('F1 score knn: ', knn_f1)
-    print('F1 manually knn: ', knn_f1_manually)
-    print('accuracy knn: ', knn_accuracy)
-    print('metrics:')
-    print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
-    print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
-    print('knn metrics: ', find_metrics(y_test, knn_predict))
+    # knn_predict = knn(docvecs, inferred_X_test, y_train, 5)
+    # knn_precision = precision_score(y_test, knn_predict, average='micro')
+    # knn_recall = recall_score(y_test, knn_predict, average='micro')
+    # knn_f1 = f1_score(y_test, knn_predict, average='micro')
+    # knn_f1_manually = (2 * knn_precision * knn_recall) / (knn_precision + knn_recall)
+    # knn_accuracy = accuracy_score(y_test, knn_predict)
+    # print('knn_result: ', knn_predict)
+    # print('precision knn: ', knn_precision)
+    # print('recall knn: ', knn_recall)
+    # print('F1 score knn: ', knn_f1)
+    # print('F1 manually knn: ', knn_f1_manually)
+    # print('accuracy knn: ', knn_accuracy)
+    # print('metrics:')
+    # print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
+    # print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
+    # print('knn metrics: ', find_metrics(y_test, knn_predict))
 
     svmClf = svm_clf(docvecs, y_train, 1.)
-    svm_predict = svmClf.predict(inferred_X_test)
-    svm_precision = precision_score(y_test, svm_predict, average='micro')
-    svm_recall = recall_score(y_test, svm_predict, average='micro')
-    svm_f1 = f1_score(y_test, svm_predict, average='micro')
-    svm_f1_manually = (2 * svm_precision * svm_recall) / (svm_precision + svm_recall)
-    svm_accuracy = accuracy_score(y_test, svm_predict)
-    print('svm_result: ', svm_predict)
-    print('precision svm: ', svm_precision)
-    print('recall svm: ', svm_recall)
-    print('F1 score svm: ', svm_f1)
-    print('F1 manually svm: ', svm_f1_manually)
-    print('accuracy svm: ', svm_accuracy)
-    print('metrics:')
-    print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
-    print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
-    print('svm metrics: ', find_metrics(y_test, svm_predict))
+    # svm_predict = svmClf.predict(inferred_X_test)
+    # svm_precision = precision_score(y_test, svm_predict, average='micro')
+    # svm_recall = recall_score(y_test, svm_predict, average='micro')
+    # svm_f1 = f1_score(y_test, svm_predict, average='micro')
+    # svm_f1_manually = (2 * svm_precision * svm_recall) / (svm_precision + svm_recall)
+    # svm_accuracy = accuracy_score(y_test, svm_predict)
+    # print('svm_result: ', svm_predict)
+    # print('precision svm: ', svm_precision)
+    # print('recall svm: ', svm_recall)
+    # print('F1 score svm: ', svm_f1)
+    # print('F1 manually svm: ', svm_f1_manually)
+    # print('accuracy svm: ', svm_accuracy)
+    # print('metrics:')
+    # print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
+    # print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
+    # print('svm metrics: ', find_metrics(y_test, svm_predict))
 
     rfClf = random_forest_clf(docvecs, y_train)
-    rf_predict = rfClf.predict(inferred_X_test)
-    rf_precision = precision_score(y_test, rf_predict, average='micro')
-    rf_recall = recall_score(y_test, rf_predict, average='micro')
-    rf_f1 = f1_score(y_test, rf_predict, average='micro')
-    rf_f1_manually = (2 * rf_precision * rf_recall) / (rf_precision + rf_recall)
-    rf_accuracy = accuracy_score(y_test, rf_predict)
-    print('rf_result: ', rf_predict)
-    print('precision rf: ', rf_precision)
-    print('recall rf: ', rf_recall)
-    print('F1 score rf: ', rf_f1)
-    print('F1 manually rf: ', rf_f1_manually)
-    print('accuracy rf: ', rf_accuracy)
-    print('metrics:')
-    print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
-    print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
-    print('rf metrics: ', find_metrics(y_test, rf_predict))
+    # rf_predict = rfClf.predict(inferred_X_test)
+    # rf_precision = precision_score(y_test, rf_predict, average='micro')
+    # rf_recall = recall_score(y_test, rf_predict, average='micro')
+    # rf_f1 = f1_score(y_test, rf_predict, average='micro')
+    # rf_f1_manually = (2 * rf_precision * rf_recall) / (rf_precision + rf_recall)
+    # rf_accuracy = accuracy_score(y_test, rf_predict)
+    # print('rf_result: ', rf_predict)
+    # print('precision rf: ', rf_precision)
+    # print('recall rf: ', rf_recall)
+    # print('F1 score rf: ', rf_f1)
+    # print('F1 manually rf: ', rf_f1_manually)
+    # print('accuracy rf: ', rf_accuracy)
+    # print('metrics:')
+    # print('metrics[0] == precision, metrics[1] == recall, metrics[2] == f1, metrics[3] == accuracy')
+    # print('metrics[:][0] == for all classes, metrics[:][i] == for class number i')
+    # print('rf metrics: ', find_metrics(y_test, rf_predict))
+
+    inferred_X_phase1 = []
+    for doc in X_phase1:
+        inferred_X_phase1.append(doc2vecmodel.infer(doc))
+
+    nb_predict_phase1 = []
+    for x_test in X_phase1:
+        porb, pred = nb_clf.infer(x_test)
+        nb_predict_phase1.append(pred)
+
+    knn_predict_phase1 = knn(docvecs, inferred_X_phase1, y_train, 5)
+
+    svm_predict_phase1 = svmClf.predict(inferred_X_phase1)
+
+    rf_predict_phase1 = rfClf.predict(inferred_X_phase1)
+
+    print(nb_predict_phase1)
+    print(knn_predict_phase1)
+    print(svm_predict_phase1)
+    print(rf_predict_phase1)
+
+    print(search_by_subject(nb_predict_phase1, 1))
