@@ -19,11 +19,11 @@ if __name__ == '__main__':
     english_preprocessor = EnglishProcessor()
     persian_preprocessor = PersianProcessor()
 
-    #vb_compressor = VariableByte(positional_index=positional_index.index)
-    #vb_compressor.compress()
+    # vb_compressor = VariableByte(positional_index=positional_index.index)
+    # vb_compressor.compress()
 
-    #gm_compressor = GammaCode(positional_index=positional_index.index)
-    #gm_compressor.compress()
+    # gm_compressor = GammaCode(positional_index=positional_index.index)
+    # gm_compressor.compress()
 
     train_path = 'data/phase2_train.csv'
     test_path = 'data/phase2_test.csv'
@@ -68,6 +68,8 @@ if __name__ == '__main__':
         print("28. Get SVM metrics")
         print("29. Get random forest metrics")
         print("30. Search by subject number")
+        print("31. Find best k for k-NN")
+        print("32. Find best C for svm")
 
         cmd = int(input())
         if cmd == 0:
@@ -218,7 +220,7 @@ if __name__ == '__main__':
             _ = persian_preprocessor.preprocess_xml_docs(persian_docs)
             words = persian_preprocessor.find_stopwords()
             words = [(word, freq) for word, freq in words.items()]
-            words = sorted(words, key= lambda x: x[1], reverse=True)
+            words = sorted(words, key=lambda x: x[1], reverse=True)
             print(words[:30])
 
         elif cmd == 19:
@@ -537,3 +539,109 @@ if __name__ == '__main__':
 
             tag = int(input("Enter the tag"))
             print(search_by_subject(predict, tag))
+
+        elif cmd == 31:
+            print("Choose the vector model:")
+            print("1. doc2vec")
+            print("2. tf-idf")
+            cmd = int(input())
+            new_X_train = X_train[0: 8100]
+            new_y_train = y_train[0: 8100]
+            new_X_test = X_train[8100:]
+            new_y_test = y_train[8100:]
+            if cmd == 1:
+                doc2vec_train_corpus = [TaggedDocument(doc, [i]) for i, doc in enumerate(new_X_train)]
+                doc2vecmodel = Doc2VecModel(vector_size=50, min_count=2, epochs=40)
+                print('training the model...')
+                doc2vecmodel.train(doc2vec_train_corpus)
+                doc2vecmodel.save('model.bin')
+                docvecs = doc2vecmodel.get_docvecs()
+
+                inferred_X_test = []
+                for doc in new_X_test:
+                    inferred_X_test.append(doc2vecmodel.infer(doc))
+
+            else:
+                new_train = train['Text'][0:8100]
+                english_preprocessor = EnglishProcessor()
+                positional_index = Positional(preprocessor=english_preprocessor)
+                positional_index.add_docs(new_train)
+                tf_idf = TF_IDF(positional_index, english_preprocessor)
+                docvecs = np.transpose(tf_idf.tf_idf_matrix)
+
+                inferred_X_test = []
+                for doc in new_X_test:
+                    _, vec = tf_idf.search(doc, True)
+                    inferred_X_test.append(vec.T)
+
+            knn1 = knn(docvecs, inferred_X_test, new_y_train, 1)
+            knn5 = knn(docvecs, inferred_X_test, new_y_train, 5)
+            knn9 = knn(docvecs, inferred_X_test, new_y_train, 9)
+
+            acc1 = accuracy_score(new_y_test, knn1)
+            acc5 = accuracy_score(new_y_test, knn5)
+            acc9 = accuracy_score(new_y_test, knn9)
+
+            if acc1 >= acc5 and acc1 >= acc9:
+                print('best k is 1')
+            elif acc5 >= acc1 and acc5 >= acc9:
+                print('best k is 5')
+            else:
+                print('best k is 9')
+
+        elif cmd == 32:
+            print("Choose the vector model:")
+            print("1. doc2vec")
+            print("2. tf-idf")
+            cmd = int(input())
+            new_X_train = X_train[0: 8100]
+            new_y_train = y_train[0: 8100]
+            new_X_test = X_train[8100:]
+            new_y_test = y_train[8100:]
+            if cmd == 1:
+                doc2vec_train_corpus = [TaggedDocument(doc, [i]) for i, doc in enumerate(new_X_train)]
+                doc2vecmodel = Doc2VecModel(vector_size=50, min_count=2, epochs=40)
+                print('training the model...')
+                doc2vecmodel.train(doc2vec_train_corpus)
+                doc2vecmodel.save('model.bin')
+                docvecs = doc2vecmodel.get_docvecs()
+
+                inferred_X_test = []
+                for doc in new_X_test:
+                    inferred_X_test.append(doc2vecmodel.infer(doc))
+
+            else:
+                new_train = train['Text'][0:8100]
+                english_preprocessor = EnglishProcessor()
+                positional_index = Positional(preprocessor=english_preprocessor)
+                positional_index.add_docs(new_train)
+                tf_idf = TF_IDF(positional_index, english_preprocessor)
+                docvecs = np.transpose(tf_idf.tf_idf_matrix)
+
+                inferred_X_test = []
+                for doc in new_X_test:
+                    _, vec = tf_idf.search(doc, True)
+                    inferred_X_test.append(vec.T)
+
+            svmClf = svm_clf(docvecs, new_y_train, 0.5)
+            svm0_5 = svmClf.predict(inferred_X_test)
+            svmClf = svm_clf(docvecs, new_y_train, 1.0)
+            svm1 = svmClf.predict(inferred_X_test)
+            svmClf = svm_clf(docvecs, new_y_train, 1.5)
+            svm1_5 = svmClf.predict(inferred_X_test)
+            svmClf = svm_clf(docvecs, new_y_train, 2.0)
+            svm2 = svmClf.predict(inferred_X_test)
+
+            acc0_5 = accuracy_score(new_y_test, svm0_5)
+            acc1 = accuracy_score(new_y_test, svm1)
+            acc1_5 = accuracy_score(new_y_test, svm1_5)
+            acc2 = accuracy_score(new_y_test, svm2)
+
+            if acc0_5 >= acc1 and acc0_5 >= acc1_5 and acc0_5 >= acc2:
+                print('best C is 0.5')
+            elif acc1 >= acc0_5 and acc1 >= acc1_5 and acc1 >= acc2:
+                print('best C is 1.0')
+            elif acc1_5 >= acc0_5 and acc1_5 >= acc1 and acc1_5 >= acc2:
+                print('best C is 1.5')
+            else:
+                print('best C is 2.0')
