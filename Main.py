@@ -657,5 +657,5 @@ if __name__ == '__main__':
         elif cmd == 33:
             print("Enter the number of papers that you need")
             cmd = int(input())
-            print("The result will be saved in 'papers_info.json'")
+            print("The result will be saved in 'papers_info`number`.json'")
             crawl(cmd)
