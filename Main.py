@@ -9,6 +9,7 @@ from compressor import GammaCode, VariableByte
 from spell_check import SpellChecker
 from searcher import TF_IDF
 from utils import from_xml, read_corpus, search_by_subject
+from crawler import crawl
 from pprint import pprint
 
 DEBUG = True
@@ -70,6 +71,7 @@ if __name__ == '__main__':
         print("30. Search by subject number")
         print("31. Find best k for k-NN")
         print("32. Find best C for svm")
+        print("33. Crawl semantic scholar")
 
         cmd = int(input())
         if cmd == 0:
@@ -651,3 +653,9 @@ if __name__ == '__main__':
                 print('best C is 1.5')
             else:
                 print('best C is 2.0')
+
+        elif cmd == 33:
+            print("Enter the number of papers that you need")
+            cmd = int(input())
+            print("The result will be saved in 'papers_info.json'")
+            crawl(cmd)
