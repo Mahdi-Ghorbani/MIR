@@ -67,8 +67,9 @@ def read_corpus(file_path: str, has_tag=True, has_id=False):
 
 def tf_idf(docs: List[List[str]], vocab: Dict):
     """
+    :param docs:
     :param vocab: a dictionary with words as keys and their freqs as values
-    :return: tf-idf vectors for documents
+    :return: tf-idf vectors for vocab and documents
     """
     tf_idf_matrix = np.zeros((len(vocab), len(docs)), dtype=np.float32)
     word2id = {word: i for i, word in enumerate(vocab)}
@@ -76,14 +77,36 @@ def tf_idf(docs: List[List[str]], vocab: Dict):
     for word in vocab:
         idf = np.log(len([1 for doc in docs if word in doc])) + 1
         for i, doc in enumerate(docs):
-            tf = 1 + np.log(len([x for x in doc if x == word]))
+            tf = 1 + np.log(len([w for w in doc if w == word]))
             tf_idf_matrix[word2id[word], i] = tf / idf
 
-    for doc in docs:
-        for word
+    return tf_idf_matrix, word2id
 
-    return
 
+def save_word2vec_vocab(vocab: List[str], word2vec_model):
+    word2vec_words = []
+    vecs = []
+    for word in vocab:
+        if word in word2vec_model.vocab:  #TODO
+            word2vec_words.append(word)
+            vecs.append(word2vec_model[word])
+
+    vecs = np.concatenate(vecs)
+    np.save('word_vecs', vecs)
+    with open('vocab_word2vec.txt' , 'w') as f:
+        for word in word2vec_words:
+            f.write(word + '\n')
+
+
+def load_word2vec_vocab():
+    vecs = np.load('word_vecs.np')
+
+    vocab = []
+    with open('vocab_word2vec.txt', 'r') as f:
+        for row in f:
+            vocab.append(row[:-1])
+
+    return vocab, vecs
 
 def search_by_subject(tags: List[int], query_tag: int):
     result = []
