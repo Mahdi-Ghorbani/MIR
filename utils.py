@@ -127,7 +127,7 @@ def save_word2vec_vocab(vocab_docs: List[str], word2vec_model: KeyedVectors):
     print('Saved...')
 
 def get_document_vectors_tfidf():
-    tf_idf_matrix = np.load('doc_vecs_phase3.npy')
+    tf_idf_matrix = np.load('tf_idf.npy')
     return tf_idf_matrix.T
 
 
