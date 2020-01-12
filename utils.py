@@ -3,6 +3,8 @@ from typing import Set, List
 from editdistance import distance
 import pandas as pd
 from gensim.utils import simple_preprocess
+from typing import Dict
+import numpy as np
 from gensim.models.doc2vec import TaggedDocument
 
 
@@ -41,7 +43,7 @@ def get_bigrams(token: str):
     return [token[i:i + 2] for i in range(len(token) - 1)]
 
 
-def read_corpus(file_path: str, has_tag=True):
+def read_corpus(file_path: str, has_tag=True, has_id=False):
     """
     Function used for reading the documents of phase 2
     :param file: path to the documents
@@ -56,11 +58,31 @@ def read_corpus(file_path: str, has_tag=True):
     if has_tag:
         labels = df['Tag'].values.tolist()
 
+    if has_id:
+        ids = df['ID'].values.tolist()
+        return tokens, ids
+
     return tokens, labels
 
 
-def tf_idf():
-    pass
+def tf_idf(docs: List[List[str]], vocab: Dict):
+    """
+    :param vocab: a dictionary with words as keys and their freqs as values
+    :return: tf-idf vectors for documents
+    """
+    tf_idf_matrix = np.zeros((len(vocab), len(docs)), dtype=np.float32)
+    word2id = {word: i for i, word in enumerate(vocab)}
+
+    for word in vocab:
+        idf = np.log(len([1 for doc in docs if word in doc])) + 1
+        for i, doc in enumerate(docs):
+            tf = 1 + np.log(len([x for x in doc if x == word]))
+            tf_idf_matrix[word2id[word], i] = tf / idf
+
+    for doc in docs:
+        for word
+
+    return
 
 
 def search_by_subject(tags: List[int], query_tag: int):
