@@ -5,7 +5,10 @@ import pandas as pd
 from gensim.utils import simple_preprocess
 from typing import Dict
 import numpy as np
+from gensim.models import KeyedVectors
 from gensim.models.doc2vec import TaggedDocument
+from tqdm import tqdm
+import os
 
 
 def from_xml(xml_file):
@@ -65,48 +68,82 @@ def read_corpus(file_path: str, has_tag=True, has_id=False):
     return tokens, labels
 
 
-def tf_idf(docs: List[List[str]], vocab: Dict):
+def tf_idf(docs: List[List[str]], vocab, word2id: Dict):
     """
     :param docs:
     :param vocab: a dictionary with words as keys and their freqs as values
     :return: tf-idf vectors for vocab and documents
     """
+    if os.path.exists('tf_idf.npy'):
+        return  np.load('tf_idf.npy')
+
     tf_idf_matrix = np.zeros((len(vocab), len(docs)), dtype=np.float32)
-    word2id = {word: i for i, word in enumerate(vocab)}
-
-    for word in vocab:
-        idf = np.log(len([1 for doc in docs if word in doc])) + 1
+    n_docs = len(docs)
+    for word in tqdm(vocab):
+        idf = np.log(n_docs / len([1 for doc in docs if word in doc]))
         for i, doc in enumerate(docs):
-            tf = 1 + np.log(len([w for w in doc if w == word]))
-            tf_idf_matrix[word2id[word], i] = tf / idf
-
-    return tf_idf_matrix, word2id
+            tf = np.log(1 + len([w for w in doc if w == word]))
+            tf_idf_matrix[word2id[word], i] = tf * idf
 
 
-def save_word2vec_vocab(vocab: List[str], word2vec_model):
-    word2vec_words = []
+    np.save('tf_idf', tf_idf_matrix)
+
+    return tf_idf_matrix
+
+
+def get_document_vectors_word2vec(tokenized_docs: List[List[str]], tf_idf_matrix: np.ndarray, word2id: Dict,
+                                  word_vectors: np.ndarray):
+    vocab = list(word2id.keys())
+    files = os.listdir(path='.')
+    if 'doc_vecs_phase3.npy' in files:
+        print('Loading doc vecs...')
+        return np.load('doc_vecs_phase3.npy')
+
+    embedding_dim = word_vectors.shape[1]
+    doc_vecs = np.zeros((len(tokenized_docs), embedding_dim), dtype=np.float32)
+    for doc_id, doc in enumerate(tokenized_docs):
+        words = [word for word in doc if word in vocab]
+        doc_vecs[doc_id] = np.sum([word_vectors[word2id[word]] * tf_idf_matrix[word2id[word], doc_id]
+                                   for word in words])
+
+    np.save('doc_vecs_phase3', doc_vecs)
+    return doc_vecs
+
+
+def save_word2vec_vocab(vocab_docs: List[str], word2vec_model: KeyedVectors):
+    valid_words = []
     vecs = []
-    for word in vocab:
-        if word in word2vec_model.vocab:  #TODO
-            word2vec_words.append(word)
+    for word in vocab_docs:
+        if word in word2vec_model.wv.vocab:
+            valid_words.append(word)
             vecs.append(word2vec_model[word])
 
-    vecs = np.concatenate(vecs)
-    np.save('word_vecs', vecs)
-    with open('vocab_word2vec.txt' , 'w') as f:
-        for word in word2vec_words:
-            f.write(word + '\n')
+    vecs = np.vstack(vecs)
+    np.save('word_vectors', vecs)
+    with open('vocab_word2vec.txt', 'w') as f:
+        for i, word in enumerate(valid_words):
+            f.write(str(i) + ' ' + word + '\n')
+
+    print('Saved...')
+
+def get_document_vectors_tfidf():
+    tf_idf_matrix = np.load('doc_vecs_phase3.npy')
+    return tf_idf_matrix.T
 
 
 def load_word2vec_vocab():
-    vecs = np.load('word_vecs.np')
+    vecs = np.load('word_vectors.npy')
 
     vocab = []
+    word2id = {}
     with open('vocab_word2vec.txt', 'r') as f:
         for row in f:
-            vocab.append(row[:-1])
+            index, word = row[:-1].split()
+            vocab.append(word)
+            word2id[word] = int(index)
 
-    return vocab, vecs
+    return vocab, word2id, vecs
+
 
 def search_by_subject(tags: List[int], query_tag: int):
     result = []
