@@ -42,3 +42,9 @@ if __name__ == "__main__":
     tf_idf_matrix = tf_idf(tokenized_docs, vocab, word2id)
     doc_vecs = get_document_vectors_word2vec(tokenized_docs, tf_idf_matrix, word2id, vectors)
 
+    #model = kmeans(X_train=doc_vecs[:4000], n_clusters=4)
+    #predictions = model.predict(doc_vecs[4000:])
+
+
+
+
